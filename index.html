@@ -14,14 +14,14 @@
 </style>
 <script>
   // URL del Web App (Apps Script)
-  const API_URL = "https://script.google.com/macros/s/AKfycbwWZgVNaYmuFIepSghDHjhuH_LPsmq5SINc8ccrBA42sqhXz7Hp34d2K3JKnBlMEyEelA/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbyQc8jtzmHwaKWK9VW3nv0s62o6ZVCoex0pLUJGmB7tHZqjgZqP91_pz_HazarrUHbeCg/exec";
 
   function todayISO(){
     const d=new Date(), p=n=>String(n).padStart(2,"0");
     return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
   }
 
-  // POST compatible: primero JSON, si falla prueba x-www-form-urlencoded
+  // POST compatible: primero JSON; si falla, x-www-form-urlencoded
   async function postJSONCompat(payload){
     try{
       const r = await fetch(API_URL,{ method:"POST", body: JSON.stringify(payload) });
@@ -71,11 +71,9 @@
     const msg   = document.getElementById("msg");
     const btn   = document.getElementById("submitBtn");
 
-    // fecha por defecto y mínimo: hoy
     fecha.value = todayISO();
     fecha.min   = todayISO();
 
-    // pintar disponibilidad para la fecha seleccionada
     const refreshStats = async () => {
       document.getElementById("stats").textContent = "Cargando...";
       try { renderStatsBox(await getStats(fecha.value)); }
@@ -84,7 +82,6 @@
     refreshStats();
     fecha.addEventListener("change", refreshStats);
 
-    // enviar formulario
     form.addEventListener("submit", async (ev)=>{
       ev.preventDefault();
       msg.textContent = "";
@@ -104,7 +101,6 @@
         const r = resp.turno;
         const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
 
-        // comprobante
         document.getElementById("receipt").innerHTML = `
           <div class="text-center mb-4">
             <h3 class="text-xl font-bold">COMPROBANTE DE TURNO – Análisis de Numeraciones y Marcas Seriales</h3>
@@ -125,12 +121,12 @@
 
         msg.textContent = "Turno registrado con éxito.";
 
-        // 🔁 IMPORTANTE: reflejar disponibilidad en la MISMA fecha registrada
-        const fechaReservada = r.fecha;      // mantener la fecha del turno creado
-        form.reset();                        // limpia campos pero…
-        fecha.value = fechaReservada;        // …se queda en esa fecha
+        // Mantener la fecha reservada y refrescar stats de esa misma fecha
+        const fechaReservada = r.fecha;
+        form.reset();
+        fecha.value = fechaReservada;
         document.getElementById("stats").textContent = "Cargando...";
-        renderStatsBox(await getStats(fecha.value)); // refresca contadores de esa fecha
+        renderStatsBox(await getStats(fecha.value));
 
       }catch(e){
         msg.textContent = e.message;
