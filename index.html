@@ -3,40 +3,27 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Turnos – Pericias Químicas</title>
+<title>Análisis de Numeraciones y Marcas Seriales</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  @media print {
-    body * { visibility: hidden; }
-    #printable, #printable * { visibility: visible; }
-    #printable { position:absolute; left:0; top:0; width:100%; padding:24px; }
-  }
+  @media print { body * { visibility: hidden; } #printable, #printable * { visibility: visible; }
+  #printable { position:absolute; left:0; top:0; width:100%; padding:24px; } }
 </style>
 <script>
-  // ← TU NUEVA URL DE APPS SCRIPT
-  const API_URL = "https://script.google.com/macros/s/AKfycbxDrLkFxNx450gVll1HibqXy7Y2e7YQ-rN0YuF4X8IVJUW5kB74TJAoDXKelv8RjqiGHQ/exec";
+  // URL del Web App (Apps Script)
+  const API_URL = "https://script.google.com/macros/s/AKfycbwwqf-YpLD2Qe3BFqWGr7V9xDCfMu7Phc7WoMLs_g5zTlgibQ4mgFT6xDeZetulKwGrqQ/exec";
 
-  function todayISO(){
-    const d=new Date(), p=n=>String(n).padStart(2,"0");
-    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
-  }
+  function todayISO(){ const d=new Date(), p=n=>String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
 
-  // POST compatible (intenta JSON sin headers y, si falla, usa x-www-form-urlencoded)
   async function postJSONCompat(payload){
-    try{
-      const r = await fetch(API_URL,{ method:"POST", body: JSON.stringify(payload) });
-      return await r.json();
-    }catch{} // fallback:
+    try{ const r = await fetch(API_URL,{ method:"POST", body: JSON.stringify(payload) }); return await r.json(); }
+    catch{}
     const body="payload="+encodeURIComponent(JSON.stringify(payload));
-    const r2=await fetch(API_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
-      body
-    });
+    const r2=await fetch(API_URL,{ method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"}, body });
     return await r2.json();
   }
 
-  // GET estadísticas por fecha
   async function getStats(fecha){
     const r = await fetch(`${API_URL}?action=stats&fecha=${encodeURIComponent(fecha)}`);
     return await r.json();
@@ -44,10 +31,7 @@
 
   function renderStatsBox(stats){
     const box=document.getElementById("stats");
-    if(!stats.ok){
-      box.innerHTML=`<div class="text-red-600 text-sm">${stats.error||"No se pudo obtener disponibilidad"}</div>`;
-      return;
-    }
+    if(!stats.ok){ box.innerHTML=`<div class="text-red-600 text-sm">${stats.error||"No se pudo obtener disponibilidad"}</div>`; return; }
     const s=stats.stats, fmt=id=>id==="08:00-10:00"?"08:00 – 10:00":"10:30 – 12:00";
     const rows=s.slots.map(x=>`
       <div class="flex items-center justify-between rounded-xl border px-3 py-2">
@@ -71,11 +55,8 @@
     const msg=document.getElementById("msg");
     const btn=document.getElementById("submitBtn");
 
-    // Inicializa fecha de hoy y límite mínimo
-    fecha.value=todayISO();
-    fecha.min=todayISO();
+    fecha.value=todayISO(); fecha.min=todayISO();
 
-    // Carga disponibilidad para la fecha del formulario
     const refreshStats=async()=>{
       document.getElementById("stats").textContent="Cargando...";
       try{ renderStatsBox(await getStats(fecha.value)); }
@@ -84,24 +65,20 @@
     refreshStats();
     fecha.addEventListener("change", refreshStats);
 
-    // Envío del formulario
     form.addEventListener("submit", async (ev)=>{
       ev.preventDefault();
-      msg.textContent="";
-      msg.className="text-sm text-emerald-700";
-      const fd=new FormData(form);
-      const payload=Object.fromEntries(fd.entries());
+      msg.textContent=""; msg.className="text-sm text-emerald-700";
+      const fd=new FormData(form); const payload=Object.fromEntries(fd.entries());
       payload.placa=(payload.placa||"").toUpperCase();
       try{
         btn.disabled=true; btn.textContent="Enviando…";
         const resp=await postJSONCompat(payload);
         if(!resp.ok) throw new Error(resp.error||"No se pudo registrar");
 
-        // Comprobante
         const r=resp.turno, slot=r.slotId==="08:00-10:00"?"08:00 – 10:00":"10:30 – 12:00";
         document.getElementById("receipt").innerHTML=`
           <div class="text-center mb-4">
-            <h3 class="text-xl font-bold">COMPROBANTE DE TURNO</h3>
+            <h3 class="text-xl font-bold">COMPROBANTE DE TURNO – Análisis de Numeraciones y Marcas Seriales</h3>
             <p class="text-sm text-slate-600">Presente este comprobante el día de su pericia.</p>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
@@ -121,8 +98,7 @@
         msg.textContent="Turno registrado con éxito.";
         form.reset(); fecha.value=todayISO(); refreshStats();
       }catch(e){
-        msg.textContent=e.message;
-        msg.className="text-sm text-red-600";
+        msg.textContent=e.message; msg.className="text-sm text-red-600";
       }finally{
         btn.disabled=false; btn.textContent="Registrar turno";
       }
@@ -133,11 +109,7 @@
 <body class="bg-slate-50 text-slate-800">
   <header class="px-6 py-5 bg-white shadow-sm">
     <div class="max-w-5xl mx-auto flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold">Turnos para Pericias Químicas</h1>
-        <p class="text-sm text-slate-500">Capacidad: 4 (08:00–10:00) y 3 (10:30–12:00). Total 7 por día.</p>
-      </div>
-      <!-- Escudo (opcional): reemplaza src con tu logotipo -->
+      <h1 class="text-2xl font-bold">Análisis de Numeraciones y Marcas Seriales</h1>
       <img alt="Escudo" src="https://upload.wikimedia.org/wikipedia/commons/2/24/Star_blue.svg" class="h-10 opacity-40"/>
     </div>
   </header>
