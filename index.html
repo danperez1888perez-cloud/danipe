@@ -21,7 +21,7 @@
     return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
   }
 
-  // POST compatible: intenta JSON y, si falla, usa x-www-form-urlencoded
+  // POST compatible: primero JSON, si falla prueba x-www-form-urlencoded
   async function postJSONCompat(payload){
     try{
       const r = await fetch(API_URL,{ method:"POST", body: JSON.stringify(payload) });
@@ -66,20 +66,20 @@
   }
 
   document.addEventListener("DOMContentLoaded", ()=>{
-    const form=document.getElementById("turno-form");
-    const fecha=document.querySelector('input[name="fecha"]');
-    const msg=document.getElementById("msg");
-    const btn=document.getElementById("submitBtn");
+    const form  = document.getElementById("turno-form");
+    const fecha = document.querySelector('input[name="fecha"]');
+    const msg   = document.getElementById("msg");
+    const btn   = document.getElementById("submitBtn");
 
     // fecha por defecto y mínimo: hoy
-    fecha.value=todayISO();
-    fecha.min=todayISO();
+    fecha.value = todayISO();
+    fecha.min   = todayISO();
 
-    // cargar disponibilidad según la fecha del formulario
-    const refreshStats=async()=>{
-      document.getElementById("stats").textContent="Cargando...";
-      try{ renderStatsBox(await getStats(fecha.value)); }
-      catch(e){ document.getElementById("stats").textContent=e.message||"Error al consultar"; }
+    // pintar disponibilidad para la fecha seleccionada
+    const refreshStats = async () => {
+      document.getElementById("stats").textContent = "Cargando...";
+      try { renderStatsBox(await getStats(fecha.value)); }
+      catch(e){ document.getElementById("stats").textContent = e.message || "Error al consultar"; }
     };
     refreshStats();
     fecha.addEventListener("change", refreshStats);
@@ -87,22 +87,25 @@
     // enviar formulario
     form.addEventListener("submit", async (ev)=>{
       ev.preventDefault();
-      msg.textContent="";
-      msg.className="text-sm text-emerald-700";
+      msg.textContent = "";
+      msg.className   = "text-sm text-emerald-700";
 
-      const fd=new FormData(form);
-      const payload=Object.fromEntries(fd.entries());
-      payload.placa=(payload.placa||"").toUpperCase();
+      const fd = new FormData(form);
+      const payload = Object.fromEntries(fd.entries());
+      payload.placa = (payload.placa||"").toUpperCase();
 
       try{
-        btn.disabled=true; btn.textContent="Enviando…";
-        const resp=await postJSONCompat(payload);
-        if(!resp.ok) throw new Error(resp.error||"No se pudo registrar");
+        btn.disabled = true;
+        btn.textContent = "Enviando…";
 
-        const r=resp.turno;
-        const slot=r.slotId==="08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
+        const resp = await postJSONCompat(payload);
+        if(!resp.ok) throw new Error(resp.error || "No se pudo registrar");
 
-        document.getElementById("receipt").innerHTML=`
+        const r = resp.turno;
+        const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
+
+        // comprobante
+        document.getElementById("receipt").innerHTML = `
           <div class="text-center mb-4">
             <h3 class="text-xl font-bold">COMPROBANTE DE TURNO – Análisis de Numeraciones y Marcas Seriales</h3>
             <p class="text-sm text-slate-600">Presente este comprobante el día de su pericia.</p>
@@ -120,15 +123,21 @@
           </div>`;
         document.getElementById("receiptCard").classList.remove("hidden");
 
-        msg.textContent="Turno registrado con éxito.";
-        form.reset();
-        fecha.value=todayISO();
-        refreshStats();
+        msg.textContent = "Turno registrado con éxito.";
+
+        // 🔁 IMPORTANTE: reflejar disponibilidad en la MISMA fecha registrada
+        const fechaReservada = r.fecha;      // mantener la fecha del turno creado
+        form.reset();                        // limpia campos pero…
+        fecha.value = fechaReservada;        // …se queda en esa fecha
+        document.getElementById("stats").textContent = "Cargando...";
+        renderStatsBox(await getStats(fecha.value)); // refresca contadores de esa fecha
+
       }catch(e){
-        msg.textContent=e.message;
-        msg.className="text-sm text-red-600";
+        msg.textContent = e.message;
+        msg.className   = "text-sm text-red-600";
       }finally{
-        btn.disabled=false; btn.textContent="Registrar turno";
+        btn.disabled = false;
+        btn.textContent = "Registrar turno";
       }
     });
   });
