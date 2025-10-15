@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Análisis de Numeraciones y Marcas Seriales</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- SDK de Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   @media print {
     body * { visibility: hidden; }
@@ -13,51 +15,32 @@
   }
 </style>
 <script>
-  // URL del Web App (Apps Script)
-  const API_URL = "https://script.google.com/macros/s/AKfycbwtUb3SnYY_30XwVqwAneWndhRes4kXG_lfy8v-r6uvF13dDxY5zmgx3TRKuzjY3M_gEA/exec";
+  /*********** CONFIG ***********/
+  const API_URL   = "https://script.google.com/macros/s/AKfycbwtUb3SnYY_30XwVqwAneWndhRes4kXG_lfy8v-r6uvF13dDxY5zmgx3TRKuzjY3M_gEA/exec";
+  const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // ⬅️ pega aquí tu OAuth Client ID (Web)
 
-  function todayISO(){
-    const d=new Date(), p=n=>String(n).padStart(2,"0");
-    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
-  }
+  /*********** Helpers ***********/
+  function todayISO(){ const d=new Date(), p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
 
-  // POST compatible: intenta JSON y, si falla, usa x-www-form-urlencoded
   async function postJSONCompat(payload){
-    try{
-      const r = await fetch(API_URL,{ method:"POST", body: JSON.stringify(payload) });
-      return await r.json();
-    }catch{}
+    try{ const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)}); return await r.json(); }
+    catch{}
     const body="payload="+encodeURIComponent(JSON.stringify(payload));
-    const r2 = await fetch(API_URL,{
-      method:"POST",
-      headers:{ "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8" },
-      body
-    });
+    const r2=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body});
     return await r2.json();
   }
-
-  // GET estadísticas por fecha
-  async function getStats(fecha){
-    const r = await fetch(`${API_URL}?action=stats&fecha=${encodeURIComponent(fecha)}`);
-    return await r.json();
-  }
+  async function getStats(fecha){ const r=await fetch(`${API_URL}?action=stats&fecha=${encodeURIComponent(fecha)}`); return await r.json(); }
 
   function renderStatsBox(stats){
     const box=document.getElementById("stats");
-    if(!stats.ok){
-      box.innerHTML=`<div class="text-red-600 text-sm">${stats.error||"No se pudo obtener disponibilidad"}</div>`;
-      return;
-    }
+    if(!stats.ok){ box.innerHTML=`<div class="text-red-600 text-sm">${stats.error||"No se pudo obtener disponibilidad"}</div>`; return; }
     const s=stats.stats, fmt=id=>id==="08:00-10:00"?"08:00 – 10:00":"10:30 – 12:00";
     const rows=s.slots.map(x=>`
       <div class="flex items-center justify-between rounded-xl border px-3 py-2">
-        <div>
-          <div class="font-medium">${fmt(x.slotId)}</div>
-          <div class="text-xs text-slate-500">Usados: ${x.used} / ${x.capacity}</div>
-        </div>
+        <div><div class="font-medium">${fmt(x.slotId)}</div><div class="text-xs text-slate-500">Usados: ${x.used} / ${x.capacity}</div></div>
         <div class="text-sm font-semibold">${x.remaining} disp.</div>
       </div>`).join("");
-    box.innerHTML=`
+    box.innerHTML = `
       <div class="text-sm text-slate-600">Fecha: <strong>${s.fecha}</strong></div>
       <div class="mt-3 space-y-2">${rows}</div>
       <div class="rounded-xl px-3 py-2 text-sm font-medium ${s.remainingDay===0?"bg-red-50 text-red-700":"bg-emerald-50 text-emerald-700"}">
@@ -65,34 +48,62 @@
       </div>`;
   }
 
+  /*********** Estado de login ***********/
+  let idToken = null; // token JWT emitido para tu CLIENT_ID
+  let email   = null; // correo del usuario (solo para mostrar)
+
+  function onGoogleCredential(response){
+    idToken = response.credential;                // JWT
+    const payload = JSON.parse(atob(idToken.split(".")[1])); // decod solo para mostrar
+    email = payload.email || "(desconocido)";
+    document.getElementById("who").textContent = email;
+    document.getElementById("signinBox").classList.add("hidden");
+    document.getElementById("formBox").classList.remove("opacity-50","pointer-events-none");
+  }
+
+  window.onload = function(){
+    // Inicializa botón de Google
+    google.accounts.id.initialize({ client_id: CLIENT_ID, callback: onGoogleCredential });
+    google.accounts.id.renderButton(
+      document.getElementById("gsiBtn"),
+      { theme:"outline", size:"large", width: 280 }
+    );
+    // google.accounts.id.prompt(); // opcional One Tap
+  };
+
+  /*********** App ***********/
   document.addEventListener("DOMContentLoaded", ()=>{
     const form  = document.getElementById("turno-form");
     const fecha = document.querySelector('input[name="fecha"]');
     const msg   = document.getElementById("msg");
     const btn   = document.getElementById("submitBtn");
 
-    // fecha por defecto y mínimo: hoy
     fecha.value = todayISO();
     fecha.min   = todayISO();
 
-    // pintar disponibilidad para la fecha seleccionada
     const refreshStats = async () => {
       document.getElementById("stats").textContent = "Cargando...";
-      try { renderStatsBox(await getStats(fecha.value)); }
+      try{ renderStatsBox(await getStats(fecha.value)); }
       catch(e){ document.getElementById("stats").textContent = e.message || "Error al consultar"; }
     };
     refreshStats();
     fecha.addEventListener("change", refreshStats);
 
-    // enviar formulario
     form.addEventListener("submit", async (ev)=>{
       ev.preventDefault();
       msg.textContent = "";
       msg.className   = "text-sm text-emerald-700";
 
+      if(!idToken){
+        msg.textContent = "Debes iniciar sesión con Google.";
+        msg.className   = "text-sm text-red-600";
+        return;
+      }
+
       const fd = new FormData(form);
       const payload = Object.fromEntries(fd.entries());
-      payload.placa = (payload.placa||"").toUpperCase();
+      payload.placa   = (payload.placa||"").toUpperCase();
+      payload.idToken = idToken; // 👈 se envía al backend
 
       try{
         btn.disabled = true;
@@ -111,6 +122,7 @@
             <p class="text-sm text-slate-600">Presente este comprobante el día de su pericia.</p>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+            <div><div class="text-xs uppercase text-slate-500">Correo</div><div class="font-medium">${email}</div></div>
             <div><div class="text-xs uppercase text-slate-500">ID turno</div><div class="font-medium">${r.id_turno}</div></div>
             <div><div class="text-xs uppercase text-slate-500">Fecha</div><div class="font-medium">${r.fecha}</div></div>
             <div><div class="text-xs uppercase text-slate-500">Horario</div><div class="font-medium">${slot}</div></div>
@@ -125,7 +137,6 @@
 
         msg.textContent = "Turno registrado con éxito.";
 
-        // Mantener la fecha reservada y refrescar stats de esa misma fecha
         const fechaReservada = r.fecha;
         form.reset();
         fecha.value = fechaReservada;
@@ -152,7 +163,17 @@
   </header>
 
   <main class="max-w-5xl mx-auto p-6 grid gap-6 md:grid-cols-3">
-    <section class="bg-white rounded-2xl shadow p-6 md:col-span-2">
+    <!-- Caja de login -->
+    <section id="signinBox" class="bg-white rounded-2xl shadow p-6 md:col-span-3">
+      <h2 class="text-lg font-semibold mb-2">Ingreso</h2>
+      <p class="text-sm text-slate-600 mb-4">Para registrar turnos debes iniciar sesión con Google.</p>
+      <div id="gsiBtn"></div>
+      <p class="text-xs text-slate-500 mt-3">Si no aparece el botón, revisa que tu navegador permita cookies de terceros y que el dominio de esta página esté autorizado en tu Client ID.</p>
+    </section>
+
+    <!-- Formulario (deshabilitado hasta login) -->
+    <section id="formBox" class="bg-white rounded-2xl shadow p-6 md:col-span-2 opacity-50 pointer-events-none transition">
+      <div class="mb-3 text-sm text-slate-600">Conectado como: <span id="who" class="font-medium">—</span></div>
       <h2 class="text-lg font-semibold mb-4">Registrar turno</h2>
       <form id="turno-form" class="grid grid-cols-1 gap-3">
         <label class="text-sm font-medium">Oficio<span class="text-red-500">*</span>
