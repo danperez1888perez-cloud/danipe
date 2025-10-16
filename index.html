@@ -10,115 +10,61 @@
   :root{
     --navy:#1b2253;
     --navy-2:#232b6b;
-    --accent:#9aa3ff;
+    --blue:#3b82f6;  /* azul glow */
   }
-
-  /* Fondo suave en pantalla */
   body{ background:#f5f7fb; }
 
-  .glass{ background:#fff; border:1px solid #e5e7eb; border-radius:14px; box-shadow:0 10px 30px rgba(16,24,40,.08); }
+  /* ---------- Formulario (se queda como lo tienes) ---------- */
   .primary{ background:var(--navy); color:#fff; border-radius:12px; transition:.2s }
   .primary:hover{ background:var(--navy-2) }
   input,select{ border-color:#d6dafe !important }
   .field-label{ color:#2a2f61 }
 
-  /* ===================== HOJA A4 ===================== */
-  /*  A4 con márgenes fijos para que SIEMPRE salga 1 sola página */
+  /* ===================== HOJA A4 (1 página) ===================== */
   @page{ size:A4; margin:10mm; }
+  .sheet{ width:190mm; margin:0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
+  .sheet-head{ background:var(--navy); color:#fff; text-align:center; padding:8mm 8mm 6mm; }
+  .sheet-head h1{ margin:0; font-size:15pt; font-weight:800; letter-spacing:.02em; }
+  .sheet-head .sub{ margin-top:2mm; font-size:9pt; color:#dbe3ff; }
 
-  /* contenedor de la hoja en pantalla */
-  .sheet{
-    width:190mm;              /* 210mm - 2*10mm de margen */
-    max-width:100%;
-    margin:0 auto;
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:12px;
-    overflow:hidden;
-  }
+  .sheet-body{ position:relative; padding:8mm; }
 
-  /* header en formato “ribbon” */
-  .sheet-head{
-    background:var(--navy);
-    color:#fff;
-    text-align:center;
-    padding:8mm 8mm 6mm;
-  }
-  .sheet-head h1{
-    margin:0;
-    font-size:15pt;
-    font-weight:800;
-    letter-spacing:.02em;
-  }
-  .sheet-head .sub{
-    margin-top:2mm;
-    font-size:9pt;
-    color:#dbe3ff;
-  }
-
-  /* cuerpo con compactación de espacios para que quepa en 1 hoja */
-  .sheet-body{
-    position:relative;
-    padding:8mm;
-  }
-
-  /* marca de agua: visible en pantalla e impresión */
+  /* Marca de agua */
   .watermark{ position:relative; }
   .watermark::after{
-    content:"";
-    position:absolute; inset:0;
-    background: center/120mm no-repeat;  /* tamaño controlado en mm */
-    opacity:.08;
-    z-index:1;            /* por encima del fondo, debajo del contenido */
-    pointer-events:none;
-    background-image: var(--wm-url);
-    transform: rotate(-10deg);
+    content:""; position:absolute; inset:0;
+    background:center/120mm no-repeat; opacity:.08; z-index:1; pointer-events:none;
+    background-image: var(--wm-url); transform:rotate(-10deg);
   }
   .wm-content{ position:relative; z-index:2; }
 
-  /* rejilla 2 columnas compacta para caber en 1 hoja */
-  .kv-grid{
-    display:grid; grid-template-columns: 1fr 1fr; gap:6mm;
+  /* ===== Estilo de “inputs de lectura” como la segunda imagen ===== */
+  .display-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6mm; }
+  .group{ break-inside:avoid; }
+  .label{
+    font-size:9pt; color:#0f172a; margin-bottom:2mm;
+    display:inline-flex; align-items:center; gap:2mm;
   }
-  .kv{ break-inside:avoid; }
-  .chip{
-    display:inline-block;
-    background:var(--navy);
-    color:#fff;
-    padding:2mm 4mm;
-    border-radius:9999px;
-    font-size:8pt;
-    letter-spacing:.04em;
-    text-transform:uppercase;
-  }
-  .v{
-    margin-top:2mm;
-    padding:3mm 4mm;
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:10px;
-    font-weight:600;
-    color:#0f172a;
-    font-size:10pt;
-    line-height:1.25;
-    word-break:break-word;
+  .label .req{ color:#ef4444; font-weight:600; } /* asterisco rojo opcional */
+
+  .box{
+    background:#fff; border:1px solid #dbeafe; /* azul muy suave */
+    border-radius:10px; padding:3mm 4mm; font-weight:600; color:#0f172a;
+    box-shadow: 0 0 0 2px rgba(59,130,246,.08); /* glow suave permanente */
+    font-size:10pt; line-height:1.25; word-break:break-word;
   }
 
-  .escudo{
-    margin-top:8mm;
-    display:flex; justify-content:center;
-  }
+  .escudo{ margin-top:8mm; display:flex; justify-content:center; }
   .escudo img{ height:22mm; width:auto; }
 
-  /* Asegurar 1 sola página: ocultar todo excepto el comprobante al imprimir */
+  /* Impresión: 1 sola página, ocultar resto */
   @media print{
     body *{ visibility:hidden; }
     #printable, #printable *{ visibility:visible; }
     #printable{ position:absolute; inset:0; margin:0; }
-    /* nada de saltos automáticos */
     .sheet, .sheet *{ page-break-inside:avoid; break-inside:avoid; }
-    /* ocultar todo lo que no sea el recibo/botones/etc */
     .no-print{ display:none !important; }
+    .watermark::after{ opacity:.06; background-size:560px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
 </style>
 
@@ -126,7 +72,7 @@
   /* ===================== CONFIG ===================== */
   const API_URL = "https://script.google.com/macros/s/AKfycbz-XTIxbsLFxhPuJN9L-i8Y9thOwF6UrmB2ewll2YEhrcT7rlUsQycaBbdZxDcgNFZ-WA/exec";
   const ESCUDO_HEADER = "https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png";
-  /* Marca de agua: usa el ID del archivo de Drive en un link directo */
+  /* Marca de agua (Drive – lector): */
   const WATERMARK_URL = "https://drive.google.com/uc?export=view&id=1k4OrJhFAHMbi7I3Um853TME_BcrTNu-4";
 
   /* ===================== HELPERS ===================== */
@@ -204,10 +150,9 @@
         const r = resp.turno;
         const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
 
-        /* ======= HOJA ÚNICA (A4) ======= */
+        /* ======= HOJA con estilo “inputs de lectura” ======= */
         const receipt = document.getElementById("receipt");
         receipt.style.setProperty("--wm-url", `url("${WATERMARK_URL}")`);
-
         receipt.innerHTML = `
           <div class="sheet watermark">
             <div class="sheet-head">
@@ -216,48 +161,48 @@
             </div>
 
             <div class="sheet-body wm-content">
-              <div class="kv-grid">
-                <!-- IZQUIERDA -->
-                <div class="space-y-3">
-                  <div class="kv">
-                    <span class="chip">Correo</span>
-                    <div class="v">${r.email}</div>
+              <div class="display-grid">
+                <!-- Columna izquierda -->
+                <div class="space-y-4">
+                  <div class="group">
+                    <div class="label">Correo</div>
+                    <div class="box">${r.email}</div>
                   </div>
-                  <div class="kv">
-                    <span class="chip">Fecha</span>
-                    <div class="v">${r.fecha}</div>
+                  <div class="group">
+                    <div class="label">Fecha</div>
+                    <div class="box">${r.fecha}</div>
                   </div>
-                  <div class="kv">
-                    <span class="chip">Oficio</span>
-                    <div class="v">${r.oficio}</div>
+                  <div class="group">
+                    <div class="label">Oficio</div>
+                    <div class="box">${r.oficio}</div>
                   </div>
-                  <div class="kv">
-                    <span class="chip">Fiscal solicitante</span>
-                    <div class="v">${r.fiscal}</div>
+                  <div class="group">
+                    <div class="label">Fiscal solicitante</div>
+                    <div class="box">${r.fiscal}</div>
                   </div>
-                  <div class="kv">
-                    <span class="chip">Placa</span>
-                    <div class="v">${r.placa}</div>
+                  <div class="group">
+                    <div class="label">Placa</div>
+                    <div class="box">${r.placa}</div>
                   </div>
                 </div>
 
-                <!-- DERECHA -->
-                <div class="space-y-3">
-                  <div class="kv">
-                    <span class="chip">ID turno</span>
-                    <div class="v">${r.id_turno}</div>
+                <!-- Columna derecha -->
+                <div class="space-y-4">
+                  <div class="group">
+                    <div class="label">ID turno</div>
+                    <div class="box">${r.id_turno}</div>
                   </div>
-                  <div class="kv">
-                    <span class="chip">Horario</span>
-                    <div class="v">${slot}</div>
+                  <div class="group">
+                    <div class="label">Horario</div>
+                    <div class="box">${slot}</div>
                   </div>
-                  <div class="kv">
-                    <span class="chip">N° Inv./Instr. Fiscal</span>
-                    <div class="v">${r.numeroInvestigacion}</div>
+                  <div class="group">
+                    <div class="label">N° Inv./Instr. Fiscal</div>
+                    <div class="box">${r.numeroInvestigacion}</div>
                   </div>
-                  <div class="kv">
-                    <span class="chip">Propietario</span>
-                    <div class="v">${r.propietario}</div>
+                  <div class="group">
+                    <div class="label">Propietario</div>
+                    <div class="box">${r.propietario}</div>
                   </div>
                 </div>
               </div>
@@ -290,7 +235,7 @@
 </head>
 <body>
 
-  <!-- CABECERA -->
+  <!-- CABECERA (no imprime) -->
   <header class="px-4 pt-6 no-print">
     <div class="max-w-6xl mx-auto">
       <div class="flex justify-center">
@@ -305,37 +250,29 @@
     </div>
   </header>
 
-  <!-- CONTENIDO -->
+  <!-- FORM + STATS (no imprimen) -->
   <main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-3 gap-6 no-print">
-    <!-- FORM -->
-    <section class="glass p-6 md:col-span-2">
+    <section class="bg-white border rounded-xl p-6 md:col-span-2">
       <h2 class="text-xl font-semibold mb-4" style="color:var(--navy)">Registrar turno</h2>
-
       <form id="turno-form" class="grid grid-cols-1 gap-4">
         <label class="text-sm field-label">Oficio<span class="text-red-500">*</span>
           <input name="oficio" class="mt-1 w-full rounded-lg border px-3 py-2" required>
         </label>
-
         <label class="text-sm field-label">N° Investigación Previa / Instrucción Fiscal<span class="text-red-500">*</span>
           <input name="numeroInvestigacion" class="mt-1 w-full rounded-lg border px-3 py-2" required>
         </label>
-
         <label class="text-sm field-label">Fiscal solicitante<span class="text-red-500">*</span>
           <input name="fiscal" class="mt-1 w-full rounded-lg border px-3 py-2" required>
         </label>
-
         <label class="text-sm field-label">Propietario del vehículo<span class="text-red-500">*</span>
           <input name="propietario" class="mt-1 w-full rounded-lg border px-3 py-2" required>
         </label>
-
         <label class="text-sm field-label">Placa<span class="text-red-500">*</span>
           <input name="placa" class="mt-1 w-full rounded-lg border px-3 py-2 uppercase" placeholder="ABC-123" required>
         </label>
-
         <label class="text-sm field-label">Correo electrónico (para confirmar)<span class="text-red-500">*</span>
           <input name="email" type="email" class="mt-1 w-full rounded-lg border px-3 py-2" placeholder="tucorreo@ejemplo.com" required>
         </label>
-
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label class="text-sm field-label">Fecha<span class="text-red-500">*</span>
             <input type="date" name="fecha" class="mt-1 w-full rounded-lg border px-3 py-2" required>
@@ -347,37 +284,31 @@
             </select>
           </label>
         </div>
-
-        <button id="submitBtn" class="primary w-full py-3 mt-2 text-sm font-semibold tracking-wide shadow">
-          REGISTRAR TURNO
-        </button>
+        <button id="submitBtn" class="primary w-full py-3 mt-2 text-sm font-semibold shadow">REGISTRAR TURNO</button>
         <div id="msg" class="text-sm"></div>
       </form>
     </section>
 
-    <!-- STATS -->
-    <aside class="glass p-6">
+    <aside class="bg-white border rounded-xl p-6">
       <h3 class="text-lg font-semibold mb-2" style="color:var(--navy)">Disponibilidad del día</h3>
       <div id="stats" class="text-sm">Cargando…</div>
     </aside>
   </main>
 
-  <!-- SOLO COMPROBANTE PARA IMPRESIÓN -->
+  <!-- SOLO COMPROBANTE -->
   <section id="receiptCard" class="px-4 pb-6">
     <div id="printable">
       <div id="receipt"></div>
     </div>
   </section>
 
-  <!-- Barra inferior con botón (no imprime) -->
+  <!-- Botón imprimir (no imprime) -->
   <div class="fixed bottom-3 left-0 right-0 flex justify-center gap-3 no-print">
     <button class="primary px-5 py-2 text-sm font-semibold shadow" onclick="window.print()">IMPRIMIR COMPROBANTE</button>
   </div>
 
-  <footer class="max-w-6xl mx-auto px-4 pb-10 pt-4 no-print">
-    <div class="glass rounded-xl px-4 py-3 text-center text-xs text-slate-600">
-      Sistema de turnos • Uso institucional
-    </div>
+  <footer class="max-w-6xl mx-auto px-4 pb-10 pt-4 text-center text-xs text-slate-600 no-print">
+    Sistema de turnos • Uso institucional
   </footer>
 </body>
 </html>
