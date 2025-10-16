@@ -12,94 +12,113 @@
     --navy-2:#232b6b;
     --accent:#9aa3ff;
   }
-  body{
-    background: #f4f7fb;
-  }
-  .glass{ background: rgba(255,255,255,.96); backdrop-filter: blur(10px); }
-  .primary{ background: var(--navy); color:#fff; border-radius: 12px; transition:.2s ease; }
-  .primary:hover{ background: var(--navy-2); }
-  input, select{ border-color: var(--accent) !important; }
+
+  /* Fondo suave en pantalla */
+  body{ background:#f5f7fb; }
+
+  .glass{ background:#fff; border:1px solid #e5e7eb; border-radius:14px; box-shadow:0 10px 30px rgba(16,24,40,.08); }
+  .primary{ background:var(--navy); color:#fff; border-radius:12px; transition:.2s }
+  .primary:hover{ background:var(--navy-2) }
+  input,select{ border-color:#d6dafe !important }
   .field-label{ color:#2a2f61 }
 
-  /*=========== COMPROBANTE “HOJA ÚNICA” ===========*/
+  /* ===================== HOJA A4 ===================== */
+  /*  A4 con márgenes fijos para que SIEMPRE salga 1 sola página */
+  @page{ size:A4; margin:10mm; }
+
+  /* contenedor de la hoja en pantalla */
   .sheet{
-    --sheet-w: 794px;       /* A4 a 96dpi aprox */
-    --sheet-h: 1123px;
-    width: var(--sheet-w);
-    max-width: 100%;
-    margin: 0 auto;
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 10px 30px rgba(16,24,40,.08);
-    overflow: hidden;
-    background: #fff;
-  }
-  .sheet-header{
-    background: var(--navy);
-    color:#fff;
-    padding: 18px 22px;
-    text-align: center;
-  }
-  .sheet-header h1{
-    font-weight: 800;
-    letter-spacing:.02em;
-    font-size: 22px;
-  }
-  .subhead{
-    font-size: 12px;
-    color:#dce3ff;
-    margin-top: 4px;
+    width:190mm;              /* 210mm - 2*10mm de margen */
+    max-width:100%;
+    margin:0 auto;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    overflow:hidden;
   }
 
-  /* Marca de agua visible y también en impresión */
-  .watermark{ position: relative; }
+  /* header en formato “ribbon” */
+  .sheet-head{
+    background:var(--navy);
+    color:#fff;
+    text-align:center;
+    padding:8mm 8mm 6mm;
+  }
+  .sheet-head h1{
+    margin:0;
+    font-size:15pt;
+    font-weight:800;
+    letter-spacing:.02em;
+  }
+  .sheet-head .sub{
+    margin-top:2mm;
+    font-size:9pt;
+    color:#dbe3ff;
+  }
+
+  /* cuerpo con compactación de espacios para que quepa en 1 hoja */
+  .sheet-body{
+    position:relative;
+    padding:8mm;
+  }
+
+  /* marca de agua: visible en pantalla e impresión */
+  .watermark{ position:relative; }
   .watermark::after{
     content:"";
     position:absolute; inset:0;
-    background: center/520px no-repeat;
+    background: center/120mm no-repeat;  /* tamaño controlado en mm */
     opacity:.08;
-    z-index: 1;              /* por encima del fondo blanco */
+    z-index:1;            /* por encima del fondo, debajo del contenido */
     pointer-events:none;
     background-image: var(--wm-url);
+    transform: rotate(-10deg);
   }
-  .wm-content{ position: relative; z-index: 2; }
+  .wm-content{ position:relative; z-index:2; }
 
-  /* chips para títulos */
+  /* rejilla 2 columnas compacta para caber en 1 hoja */
+  .kv-grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap:6mm;
+  }
+  .kv{ break-inside:avoid; }
   .chip{
     display:inline-block;
-    background: var(--navy);
+    background:var(--navy);
     color:#fff;
-    padding: 4px 10px;
-    border-radius: 9999px;
-    font-size: 11px;
+    padding:2mm 4mm;
+    border-radius:9999px;
+    font-size:8pt;
     letter-spacing:.04em;
-    text-transform: uppercase;
-    white-space:nowrap;
+    text-transform:uppercase;
+  }
+  .v{
+    margin-top:2mm;
+    padding:3mm 4mm;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:10px;
+    font-weight:600;
+    color:#0f172a;
+    font-size:10pt;
+    line-height:1.25;
+    word-break:break-word;
   }
 
-  .kv .v{
-    font-weight: 600;
-    color: #0f172a;
-    padding: 10px 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    background: #fff;
+  .escudo{
+    margin-top:8mm;
+    display:flex; justify-content:center;
   }
-  .divider-y{
-    width: 1px; background: #e5e7eb; height: 100%;
-  }
+  .escudo img{ height:22mm; width:auto; }
 
-  /* Evitar cortes en impresión */
-  .no-break{ break-inside: avoid; page-break-inside: avoid; }
-
-  /* Botones fuera del comprobante no salen al imprimir */
+  /* Asegurar 1 sola página: ocultar todo excepto el comprobante al imprimir */
   @media print{
-    @page { size: A4; margin: 14mm; }
-    body *{ visibility: hidden; }
-    #printable, #printable *{ visibility: visible; }
-    #printable{ position: absolute; inset: 0; margin: 0 auto; }
-    .btn-area{ display:none !important; }
-    .watermark::after{ opacity:.06; background-size:560px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    body *{ visibility:hidden; }
+    #printable, #printable *{ visibility:visible; }
+    #printable{ position:absolute; inset:0; margin:0; }
+    /* nada de saltos automáticos */
+    .sheet, .sheet *{ page-break-inside:avoid; break-inside:avoid; }
+    /* ocultar todo lo que no sea el recibo/botones/etc */
+    .no-print{ display:none !important; }
   }
 </style>
 
@@ -107,7 +126,7 @@
   /* ===================== CONFIG ===================== */
   const API_URL = "https://script.google.com/macros/s/AKfycbz-XTIxbsLFxhPuJN9L-i8Y9thOwF6UrmB2ewll2YEhrcT7rlUsQycaBbdZxDcgNFZ-WA/exec";
   const ESCUDO_HEADER = "https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png";
-  /* Marca de agua desde Drive (asegúrate que el archivo esté compartido como “Cualquiera con el enlace: Lector”) */
+  /* Marca de agua: usa el ID del archivo de Drive en un link directo */
   const WATERMARK_URL = "https://drive.google.com/uc?export=view&id=1k4OrJhFAHMbi7I3Um853TME_BcrTNu-4";
 
   /* ===================== HELPERS ===================== */
@@ -185,68 +204,66 @@
         const r = resp.turno;
         const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
 
-        // ======= ARMAR “HOJA” DEL COMPROBANTE =======
+        /* ======= HOJA ÚNICA (A4) ======= */
         const receipt = document.getElementById("receipt");
         receipt.style.setProperty("--wm-url", `url("${WATERMARK_URL}")`);
+
         receipt.innerHTML = `
-          <div class="sheet watermark no-break" id="sheet">
-            <div class="sheet-header">
+          <div class="sheet watermark">
+            <div class="sheet-head">
               <h1>COMPROBANTE DE TURNO</h1>
-              <div class="subhead">Confirmación enviada a <b>${r.email}</b>. Presente este comprobante el día de su pericia.</div>
+              <div class="sub">Confirmación enviada a <b>${r.email}</b>. Presente este comprobante el día de su pericia.</div>
             </div>
 
-            <div class="wm-content p-6 md:p-8">
-              <div class="grid grid-cols-1 md:grid-cols-[1fr_1px_1fr] gap-6">
-                <!-- COL IZQ -->
-                <div class="kv space-y-4 no-break">
-                  <div>
+            <div class="sheet-body wm-content">
+              <div class="kv-grid">
+                <!-- IZQUIERDA -->
+                <div class="space-y-3">
+                  <div class="kv">
                     <span class="chip">Correo</span>
-                    <div class="v mt-2">${r.email}</div>
+                    <div class="v">${r.email}</div>
                   </div>
-                  <div>
+                  <div class="kv">
                     <span class="chip">Fecha</span>
-                    <div class="v mt-2">${r.fecha}</div>
+                    <div class="v">${r.fecha}</div>
                   </div>
-                  <div>
+                  <div class="kv">
                     <span class="chip">Oficio</span>
-                    <div class="v mt-2">${r.oficio}</div>
+                    <div class="v">${r.oficio}</div>
                   </div>
-                  <div>
+                  <div class="kv">
                     <span class="chip">Fiscal solicitante</span>
-                    <div class="v mt-2">${r.fiscal}</div>
+                    <div class="v">${r.fiscal}</div>
                   </div>
-                  <div>
+                  <div class="kv">
                     <span class="chip">Placa</span>
-                    <div class="v mt-2">${r.placa}</div>
+                    <div class="v">${r.placa}</div>
                   </div>
                 </div>
 
-                <!-- DIVISOR -->
-                <div class="divider-y hidden md:block"></div>
-
-                <!-- COL DER -->
-                <div class="kv space-y-4 no-break">
-                  <div>
+                <!-- DERECHA -->
+                <div class="space-y-3">
+                  <div class="kv">
                     <span class="chip">ID turno</span>
-                    <div class="v mt-2">${r.id_turno}</div>
+                    <div class="v">${r.id_turno}</div>
                   </div>
-                  <div>
+                  <div class="kv">
                     <span class="chip">Horario</span>
-                    <div class="v mt-2">${slot}</div>
+                    <div class="v">${slot}</div>
                   </div>
-                  <div>
+                  <div class="kv">
                     <span class="chip">N° Inv./Instr. Fiscal</span>
-                    <div class="v mt-2">${r.numeroInvestigacion}</div>
+                    <div class="v">${r.numeroInvestigacion}</div>
                   </div>
-                  <div>
+                  <div class="kv">
                     <span class="chip">Propietario</span>
-                    <div class="v mt-2">${r.propietario}</div>
+                    <div class="v">${r.propietario}</div>
                   </div>
                 </div>
               </div>
 
-              <div class="mt-10 flex justify-center">
-                <img src="${ESCUDO_HEADER}" alt="Escudo" class="h-20 md:h-24 w-auto" />
+              <div class="escudo">
+                <img src="${ESCUDO_HEADER}" alt="Escudo">
               </div>
             </div>
           </div>
@@ -271,10 +288,10 @@
   });
 </script>
 </head>
-<body class="min-h-screen">
+<body>
 
-  <!-- ENCABEZADO -->
-  <header class="px-4 pt-6">
+  <!-- CABECERA -->
+  <header class="px-4 pt-6 no-print">
     <div class="max-w-6xl mx-auto">
       <div class="flex justify-center">
         <div class="flex items-center gap-3 bg-[#1b2253] text-white px-5 py-3 rounded-xl shadow">
@@ -289,9 +306,9 @@
   </header>
 
   <!-- CONTENIDO -->
-  <main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-3 gap-6">
+  <main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-3 gap-6 no-print">
     <!-- FORM -->
-    <section class="glass rounded-2xl shadow-xl p-6 md:col-span-2">
+    <section class="glass p-6 md:col-span-2">
       <h2 class="text-xl font-semibold mb-4" style="color:var(--navy)">Registrar turno</h2>
 
       <form id="turno-form" class="grid grid-cols-1 gap-4">
@@ -339,25 +356,25 @@
     </section>
 
     <!-- STATS -->
-    <aside class="glass rounded-2xl shadow-xl p-6">
+    <aside class="glass p-6">
       <h3 class="text-lg font-semibold mb-2" style="color:var(--navy)">Disponibilidad del día</h3>
       <div id="stats" class="text-sm">Cargando…</div>
     </aside>
-
-    <!-- COMPROBANTE (solo la hoja; el botón queda fuera) -->
-    <section id="receiptCard" class="glass rounded-2xl shadow-xl p-4 md:col-span-3 hidden">
-      <div id="printable">
-        <div id="receipt"></div>
-      </div>
-    </section>
-
-    <!-- Botón fuera del comprobante (no aparece al imprimir) -->
-    <div class="md:col-span-3 flex justify-center btn-area">
-      <button class="primary px-5 py-2 text-sm font-semibold" onclick="window.print()">IMPRIMIR COMPROBANTE</button>
-    </div>
   </main>
 
-  <footer class="max-w-6xl mx-auto px-4 pb-8 pt-2">
+  <!-- SOLO COMPROBANTE PARA IMPRESIÓN -->
+  <section id="receiptCard" class="px-4 pb-6">
+    <div id="printable">
+      <div id="receipt"></div>
+    </div>
+  </section>
+
+  <!-- Barra inferior con botón (no imprime) -->
+  <div class="fixed bottom-3 left-0 right-0 flex justify-center gap-3 no-print">
+    <button class="primary px-5 py-2 text-sm font-semibold shadow" onclick="window.print()">IMPRIMIR COMPROBANTE</button>
+  </div>
+
+  <footer class="max-w-6xl mx-auto px-4 pb-10 pt-4 no-print">
     <div class="glass rounded-xl px-4 py-3 text-center text-xs text-slate-600">
       Sistema de turnos • Uso institucional
     </div>
