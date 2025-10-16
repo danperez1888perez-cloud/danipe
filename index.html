@@ -13,42 +13,93 @@
     --accent:#9aa3ff;
   }
   body{
-    background: url("https://images.unsplash.com/photo-1500937386664-56c7b58c8d16?q=80&w=1600&auto=format&fit=crop") center/cover fixed no-repeat;
+    background: #f4f7fb;
   }
-  .glass{ background: rgba(255,255,255,.92); backdrop-filter: blur(10px); }
+  .glass{ background: rgba(255,255,255,.96); backdrop-filter: blur(10px); }
   .primary{ background: var(--navy); color:#fff; border-radius: 12px; transition:.2s ease; }
   .primary:hover{ background: var(--navy-2); }
   input, select{ border-color: var(--accent) !important; }
   .field-label{ color:#2a2f61 }
 
-  /* ===== Marca de agua (visible ahora) =====
-     Clave: el pseudo-elemento va con z-index:1 y el contenido con z-index:2 */
-  .watermark { position: relative; }
+  /*=========== COMPROBANTE “HOJA ÚNICA” ===========*/
+  .sheet{
+    --sheet-w: 794px;       /* A4 a 96dpi aprox */
+    --sheet-h: 1123px;
+    width: var(--sheet-w);
+    max-width: 100%;
+    margin: 0 auto;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 30px rgba(16,24,40,.08);
+    overflow: hidden;
+    background: #fff;
+  }
+  .sheet-header{
+    background: var(--navy);
+    color:#fff;
+    padding: 18px 22px;
+    text-align: center;
+  }
+  .sheet-header h1{
+    font-weight: 800;
+    letter-spacing:.02em;
+    font-size: 22px;
+  }
+  .subhead{
+    font-size: 12px;
+    color:#dce3ff;
+    margin-top: 4px;
+  }
+
+  /* Marca de agua visible y también en impresión */
+  .watermark{ position: relative; }
   .watermark::after{
     content:"";
     position:absolute; inset:0;
-    background: center/500px no-repeat;   /* tamaño y posición */
+    background: center/520px no-repeat;
     opacity:.08;
-    z-index:1;                             /* por encima del fondo, por debajo del contenido */
+    z-index: 1;              /* por encima del fondo blanco */
     pointer-events:none;
     background-image: var(--wm-url);
   }
-  .wm-content{ position:relative; z-index:2; }  /* contenido por encima de la marca */
+  .wm-content{ position: relative; z-index: 2; }
 
-  /* Etiquetas y valores del comprobante */
-  .kv .k{ font-size:.68rem; letter-spacing:.04em; color:#64748b; text-transform:uppercase; }
-  .kv .v{ font-weight:600; color:#0f172a; }
+  /* chips para títulos */
+  .chip{
+    display:inline-block;
+    background: var(--navy);
+    color:#fff;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    letter-spacing:.04em;
+    text-transform: uppercase;
+    white-space:nowrap;
+  }
 
+  .kv .v{
+    font-weight: 600;
+    color: #0f172a;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+  }
+  .divider-y{
+    width: 1px; background: #e5e7eb; height: 100%;
+  }
+
+  /* Evitar cortes en impresión */
+  .no-break{ break-inside: avoid; page-break-inside: avoid; }
+
+  /* Botones fuera del comprobante no salen al imprimir */
   @media print{
-    body *{ visibility:hidden; }
-    #printable, #printable *{ visibility:visible; }
-    #printable{ position:absolute; left:0; top:0; width:100%; padding:24px; }
-    .watermark::after{
-      opacity:.06;
-      background-size:560px;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
+    @page { size: A4; margin: 14mm; }
+    body *{ visibility: hidden; }
+    #printable, #printable *{ visibility: visible; }
+    #printable{ position: absolute; inset: 0; margin: 0 auto; }
+    .btn-area{ display:none !important; }
+    .watermark::after{ opacity:.06; background-size:560px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
 </style>
 
@@ -56,11 +107,11 @@
   /* ===================== CONFIG ===================== */
   const API_URL = "https://script.google.com/macros/s/AKfycbz-XTIxbsLFxhPuJN9L-i8Y9thOwF6UrmB2ewll2YEhrcT7rlUsQycaBbdZxDcgNFZ-WA/exec";
   const ESCUDO_HEADER = "https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png";
-  /* Marca de agua desde Drive (archivo debe estar “Cualquiera con el enlace: Lector”) */
+  /* Marca de agua desde Drive (asegúrate que el archivo esté compartido como “Cualquiera con el enlace: Lector”) */
   const WATERMARK_URL = "https://drive.google.com/uc?export=view&id=1k4OrJhFAHMbi7I3Um853TME_BcrTNu-4";
 
   /* ===================== HELPERS ===================== */
-  const p2 = n=>String(n).padStart(2,"0");
+  const p2=n=>String(n).padStart(2,"0");
   function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`; }
 
   async function postJSONCompat(payload){
@@ -92,7 +143,6 @@
       </div>`;
   }
 
-  /* ===================== APP ===================== */
   document.addEventListener("DOMContentLoaded", ()=>{
     const form  = document.getElementById("turno-form");
     const fecha = document.querySelector('input[name="fecha"]');
@@ -135,43 +185,68 @@
         const r = resp.turno;
         const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
 
-        /* ======= COMPROBANTE (sin QR, con marca de agua y diseño nuevo) ======= */
+        // ======= ARMAR “HOJA” DEL COMPROBANTE =======
         const receipt = document.getElementById("receipt");
         receipt.style.setProperty("--wm-url", `url("${WATERMARK_URL}")`);
         receipt.innerHTML = `
-          <div class="watermark rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="sheet watermark no-break" id="sheet">
+            <div class="sheet-header">
+              <h1>COMPROBANTE DE TURNO</h1>
+              <div class="subhead">Confirmación enviada a <b>${r.email}</b>. Presente este comprobante el día de su pericia.</div>
+            </div>
+
             <div class="wm-content p-6 md:p-8">
-              <div class="text-center mb-6">
-                <h3 class="text-2xl md:text-3xl font-extrabold tracking-wide" style="color:var(--navy)">COMPROBANTE DE TURNO</h3>
-                <p class="text-sm text-slate-600 mt-1">
-                  Confirmación enviada a <b>${r.email}</b>. Presente este comprobante el día de su pericia.
-                </p>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Columna izquierda -->
-                <div class="kv space-y-3">
-                  <div><div class="k">Correo</div><div class="v">${r.email}</div></div>
-                  <div><div class="k">Fecha</div><div class="v">${r.fecha}</div></div>
-                  <div><div class="k">Oficio</div><div class="v">${r.oficio}</div></div>
-                  <div><div class="k">Fiscal solicitante</div><div class="v">${r.fiscal}</div></div>
-                  <div><div class="k">Placa</div><div class="v">${r.placa}</div></div>
+              <div class="grid grid-cols-1 md:grid-cols-[1fr_1px_1fr] gap-6">
+                <!-- COL IZQ -->
+                <div class="kv space-y-4 no-break">
+                  <div>
+                    <span class="chip">Correo</span>
+                    <div class="v mt-2">${r.email}</div>
+                  </div>
+                  <div>
+                    <span class="chip">Fecha</span>
+                    <div class="v mt-2">${r.fecha}</div>
+                  </div>
+                  <div>
+                    <span class="chip">Oficio</span>
+                    <div class="v mt-2">${r.oficio}</div>
+                  </div>
+                  <div>
+                    <span class="chip">Fiscal solicitante</span>
+                    <div class="v mt-2">${r.fiscal}</div>
+                  </div>
+                  <div>
+                    <span class="chip">Placa</span>
+                    <div class="v mt-2">${r.placa}</div>
+                  </div>
                 </div>
 
-                <!-- Separador vertical (solo desktop) -->
-                <div class="hidden md:block w-px bg-slate-200"></div>
+                <!-- DIVISOR -->
+                <div class="divider-y hidden md:block"></div>
 
-                <!-- Columna derecha -->
-                <div class="kv space-y-3 md:order-none order-last">
-                  <div><div class="k">ID turno</div><div class="v">${r.id_turno}</div></div>
-                  <div><div class="k">Horario</div><div class="v">${slot}</div></div>
-                  <div><div class="k">N° Inv./Instr. Fiscal</div><div class="v">${r.numeroInvestigacion}</div></div>
-                  <div><div class="k">Propietario</div><div class="v">${r.propietario}</div></div>
+                <!-- COL DER -->
+                <div class="kv space-y-4 no-break">
+                  <div>
+                    <span class="chip">ID turno</span>
+                    <div class="v mt-2">${r.id_turno}</div>
+                  </div>
+                  <div>
+                    <span class="chip">Horario</span>
+                    <div class="v mt-2">${slot}</div>
+                  </div>
+                  <div>
+                    <span class="chip">N° Inv./Instr. Fiscal</span>
+                    <div class="v mt-2">${r.numeroInvestigacion}</div>
+                  </div>
+                  <div>
+                    <span class="chip">Propietario</span>
+                    <div class="v mt-2">${r.propietario}</div>
+                  </div>
                 </div>
               </div>
 
-              <div class="mt-8 flex justify-center">
-                <img src="${ESCUDO_HEADER}" alt="Escudo" class="h-20 md:h-24 w-auto mx-auto" />
+              <div class="mt-10 flex justify-center">
+                <img src="${ESCUDO_HEADER}" alt="Escudo" class="h-20 md:h-24 w-auto" />
               </div>
             </div>
           </div>
@@ -269,15 +344,17 @@
       <div id="stats" class="text-sm">Cargando…</div>
     </aside>
 
-    <!-- COMPROBANTE -->
-    <section id="receiptCard" class="glass rounded-2xl shadow-xl p-6 md:col-span-3 hidden">
+    <!-- COMPROBANTE (solo la hoja; el botón queda fuera) -->
+    <section id="receiptCard" class="glass rounded-2xl shadow-xl p-4 md:col-span-3 hidden">
       <div id="printable">
         <div id="receipt"></div>
-        <div class="mt-5">
-          <button onclick="window.print()" class="primary px-5 py-2 text-sm font-semibold">IMPRIMIR COMPROBANTE</button>
-        </div>
       </div>
     </section>
+
+    <!-- Botón fuera del comprobante (no aparece al imprimir) -->
+    <div class="md:col-span-3 flex justify-center btn-area">
+      <button class="primary px-5 py-2 text-sm font-semibold" onclick="window.print()">IMPRIMIR COMPROBANTE</button>
+    </div>
   </main>
 
   <footer class="max-w-6xl mx-auto px-4 pb-8 pt-2">
