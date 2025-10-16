@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Análisis de Numeraciones y Marcas Seriales</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- Generador de QR local: evita depender de imágenes externas -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
   :root{
@@ -23,23 +21,10 @@
   input, select{ border-color: var(--accent) !important; }
   .field-label{ color:#2a2f61 }
 
-  /* QR normal centrado y grande */
-  .qr-wrap{
-    width: 256px;
-    height: 256px;
-    margin: 0 auto;          /* centrado */
-  }
-  .qr-wrap canvas, .qr-wrap img{
-    width: 256px;
-    height: 256px;
-    display: block;
-  }
-
   @media print{
     body *{ visibility:hidden; }
     #printable, #printable *{ visibility:visible; }
     #printable{ position:absolute; left:0; top:0; width:100%; padding:24px; }
-    .qr-wrap{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
 </style>
 <script>
@@ -128,7 +113,7 @@
         const r = resp.turno;
         const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
 
-        // ====== COMPROBANTE ======
+        // ====== COMPROBANTE (sin QR) ======
         document.getElementById("receipt").innerHTML = `
           <div class="text-center mb-4">
             <h3 class="text-xl font-bold" style="color:var(--navy)">COMPROBANTE DE TURNO</h3>
@@ -151,21 +136,11 @@
             <div><div class="text-xs uppercase text-slate-500">Placa</div><div class="font-medium">${r.placa}</div></div>
           </div>
 
-          <div class="mt-6">
-            <div class="qr-wrap" id="qr"></div>
-            <p class="text-center mt-2 text-xs text-slate-500">Escanee el QR para verificación rápida de turno.</p>
+          <!-- Solo el escudo, centrado -->
+          <div class="mt-8 flex justify-center">
+            <img src="${ESCUDO_HEADER}" alt="Escudo" class="h-24 w-auto mx-auto" />
           </div>
         `;
-
-        // Generar el QR normal (sin superponer logo)
-        const qrDiv = document.getElementById("qr");
-        qrDiv.innerHTML = "";
-        new QRCode(qrDiv, {
-          text: r.id_turno,
-          width: 256,
-          height: 256,
-          correctLevel: QRCode.CorrectLevel.M
-        });
 
         document.getElementById("receiptCard").classList.remove("hidden");
         msg.textContent = "Turno registrado y confirmado por email.";
