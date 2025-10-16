@@ -7,46 +7,29 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   :root{
-    --navy:#1b2253;      /* azul primario (tabs y botones) */
+    --navy:#1b2253;      /* azul primario */
     --navy-2:#232b6b;    /* hover */
-    --accent:#9aa3ff;    /* detalles finos */
+    --accent:#9aa3ff;    /* detalles de borde */
   }
   body{
     background: url("https://images.unsplash.com/photo-1500937386664-56c7b58c8d16?q=80&w=1600&auto=format&fit=crop") center/cover fixed no-repeat;
   }
-  .glass{
-    background: rgba(255,255,255,.9);
-    backdrop-filter: blur(10px);
-  }
-  .tab{
-    background: var(--navy);
-    color:#fff;
-    border-radius: 12px;
-    transition: .2s ease;
-  }
-  .tab:hover{ background: var(--navy-2); }
-  .primary{
-    background: var(--navy);
-    color:#fff;
-    border-radius: 10px;
-    transition: .2s ease;
-  }
+  .glass{ background: rgba(255,255,255,.9); backdrop-filter: blur(10px); }
+  .primary{ background: var(--navy); color:#fff; border-radius: 10px; transition:.2s ease; }
   .primary:hover{ background: var(--navy-2); }
-  input, select, textarea{
-    border-color: var(--accent) !important;
-  }
+  input, select{ border-color: var(--accent) !important; }
   .field-label{ color:#2a2f61 }
-  @media print {
-    body * { visibility: hidden; }
-    #printable, #printable * { visibility: visible; }
-    #printable { position:absolute; left:0; top:0; width:100%; padding:24px; }
+  @media print{
+    body *{ visibility:hidden; }
+    #printable, #printable *{ visibility:visible; }
+    #printable{ position:absolute; left:0; top:0; width:100%; padding:24px; }
   }
 </style>
 <script>
-  // ===================== CONFIG =====================
+  /* ===================== CONFIG ===================== */
   const API_URL = "https://script.google.com/macros/s/AKfycbz-XTIxbsLFxhPuJN9L-i8Y9thOwF6UrmB2ewll2YEhrcT7rlUsQycaBbdZxDcgNFZ-WA/exec";
 
-  // ===================== HELPERS =====================
+  /* ===================== HELPERS ===================== */
   function todayISO(){ const d=new Date(), p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
 
   async function postJSONCompat(payload){
@@ -78,7 +61,7 @@
       </div>`;
   }
 
-  // ===================== APP =====================
+  /* ===================== APP ===================== */
   document.addEventListener("DOMContentLoaded", ()=>{
     const form  = document.getElementById("turno-form");
     const fecha = document.querySelector('input[name="fecha"]');
@@ -128,14 +111,14 @@
         const r = resp.turno;
         const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
 
-        // QR opcional (simple)
+        // QR opcional
         const qrURL = "https://chart.googleapis.com/chart?chs=160x160&cht=qr&chl=" + encodeURIComponent(r.id_turno);
 
         // comprobante
         document.getElementById("receipt").innerHTML = `
           <div class="text-center mb-4">
             <h3 class="text-xl font-bold" style="color:var(--navy)">COMPROBANTE DE TURNO</h3>
-            <p class="text-sm text-slate-600">Te enviamos confirmación a <b>${r.email}</b>. Presenta este comprobante el día de tu pericia.</p>
+            <p class="text-sm text-slate-600">Confirmación enviada a <b>${r.email}</b>. Presenta este comprobante el día de tu pericia.</p>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div><div class="text-xs uppercase text-slate-500">Correo</div><div class="font-medium">${r.email}</div></div>
@@ -157,6 +140,7 @@
 
         msg.textContent = "Turno registrado y confirmado por email.";
 
+        // Mantener fecha y refrescar stats
         const fechaReservada = r.fecha;
         form.reset();
         fecha.value = fechaReservada;
@@ -175,14 +159,24 @@
 </script>
 </head>
 <body class="min-h-screen">
-  <!-- NAV TABS -->
-  <div class="max-w-6xl mx-auto px-4 pt-6">
-    <div class="flex gap-4 justify-start">
-      <a class="tab px-8 py-3 text-sm font-semibold shadow">VISIÓN</a>
-      <a class="tab px-8 py-3 text-sm font-semibold shadow">ACERCA</a>
-      <a class="tab px-8 py-3 text-sm font-semibold shadow">CONTACTO</a>
+
+  <!-- ENCABEZADO ÚNICO CENTRADO -->
+  <header class="px-4 pt-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex justify-center">
+        <div class="flex items-center gap-3 bg-[#1b2253] text-white px-5 py-3 rounded-xl shadow">
+          <img
+            src="https://cdn.goconqr.com/uploads/media/image/17158126/desktop_1d417a39-a01d-4dd3-a276-a1f33061c711.png"
+            alt="Escudo"
+            class="h-7 w-7 object-contain"
+          />
+          <span class="font-semibold tracking-wide text-center text-[12px] sm:text-sm md:text-base">
+            ANÁLISIS DE NUMERACIONES Y MARCAS SERIALES
+          </span>
+        </div>
+      </div>
     </div>
-  </div>
+  </header>
 
   <!-- CONTENIDO -->
   <main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-3 gap-6">
