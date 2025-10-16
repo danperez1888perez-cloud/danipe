@@ -229,42 +229,42 @@
 </head>
 <body>
 
-  <!-- ENCABEZADO COMPACTO: LOGO IZQ + TÍTULO DER, JUNTOS Y REDUCIDO -->
-  <header class="px-4 pt-4 no-print">
-    <div class="max-w-6xl mx-auto">
-      <div class="bg-[#1b2253] text-white rounded-2xl px-6 md:px-8 py-4 md:py-5 shadow">
-        <div class="flex items-center gap-3 md:gap-4">
-          <!-- Logo (≈50% del tamaño grande) -->
-          <img
-            src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png"
-            alt="Escudo"
-            class="h-7 sm:h-10 md:h-12 lg:h-14 w-auto object-contain"
-          />
-          <!-- Texto junto al logo -->
-          <div class="flex-1">
-            <div class="leading-snug">
-              <div class="font-extrabold tracking-wide text-sm sm:text-lg md:text-xl">
-                ANÁLISIS DE NUMERACIONES
-              </div>
-              <div class="font-extrabold tracking-wide text-sm sm:text-lg md:text-xl">
-                Y MARCAS SERIALES
-              </div>
-              <!-- Franja tricolor compacta -->
-              <div class="mt-2 flex">
-                <div class="h-[3px] w-16 bg-[#F5C400] rounded-l"></div>
-                <div class="h-[3px] w-28 bg-[#2D63C8]"></div>
-                <div class="h-[3px] w-16 bg-[#D5413B] rounded-r"></div>
+  <!-- ====== HEADER SOLO HASTA LA COLUMNA IZQUIERDA (centrado) ====== -->
+  <header class="no-print">
+    <div class="max-w-6xl mx-auto px-4 pt-4">
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Marco azul recortado (2/3) -->
+        <div class="md:col-span-2">
+          <div class="bg-[#1b2253] text-white rounded-2xl px-6 md:px-8 py-4 md:py-5 shadow">
+            <div class="flex items-center justify-center gap-3 md:gap-4">
+              <img
+                src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png"
+                alt="Escudo"
+                class="h-8 sm:h-10 md:h-12 lg:h-14 w-auto object-contain"
+              />
+              <div class="text-center leading-snug">
+                <div class="font-extrabold tracking-wide text-sm sm:text-lg md:text-xl">
+                  ANÁLISIS DE NUMERACIONES
+                </div>
+                <div class="font-extrabold tracking-wide text-sm sm:text-lg md:text-xl">
+                  Y MARCAS SERIALES
+                </div>
+                <div class="mt-2 flex justify-center">
+                  <div class="h-[3px] w-16 bg-[#F5C400] rounded-l"></div>
+                  <div class="h-[3px] w-28 bg-[#2D63C8]"></div>
+                  <div class="h-[3px] w-16 bg-[#D5413B] rounded-r"></div>
+                </div>
               </div>
             </div>
           </div>
-          <!-- Espaciador para que no se pegue al borde derecho en pantallas grandes -->
-          <div class="w-2 hidden md:block"></div>
         </div>
+        <!-- Columna derecha vacía: evita que el marco azul se extienda -->
+        <div class="hidden md:block"></div>
       </div>
     </div>
   </header>
 
-  <!-- FORM + STATS (no imprimen) -->
+  <!-- ====== FORM + STATS (no imprimen) ====== -->
   <main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-3 gap-6 no-print">
     <section class="bg-white border rounded-xl p-6 md:col-span-2">
       <h2 class="text-xl font-semibold mb-4" style="color:#1b2253">Registrar turno</h2>
@@ -309,7 +309,7 @@
     </aside>
   </main>
 
-  <!-- SOLO COMPROBANTE -->
+  <!-- ====== SOLO COMPROBANTE ====== -->
   <section id="receiptCard" class="px-4 pb-6">
     <div id="printable">
       <div id="receipt"></div>
