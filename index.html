@@ -14,7 +14,7 @@
   body{ background:#f5f7fb; }
 
   /* ===================== HOJA A4 (1 página) ===================== */
-  @page{ size:A4; margin:10mm; } /* desmarca “Encabezados y pies de página” en el diálogo de impresión */
+  @page{ size:A4; margin:10mm; } /* Desmarca “Encabezados y pies de página” al imprimir */
 
   .sheet{ width:190mm; margin:0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
   .sheet-head{ background:var(--navy); color:#fff; text-align:center; padding:8mm 8mm 6mm; }
@@ -31,7 +31,7 @@
   }
   .wm-content{ position:relative; z-index:2; }
 
-  /* Estilo “inputs de lectura” */
+  /* Estilo “inputs de lectura” del comprobante */
   .display-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6mm; }
   .group{ break-inside:avoid; }
   .label{ font-size:9pt; color:#0f172a; margin-bottom:2mm; display:inline-flex; align-items:center; gap:2mm; }
@@ -228,20 +228,31 @@
 </head>
 <body>
 
-  <!-- CABECERA 100% MÁS GRANDE -->
+  <!-- ENCABEZADO ESTILO BANNER (dos líneas + franja tricolor + escudo) -->
   <header class="px-4 pt-6 no-print">
     <div class="max-w-6xl mx-auto">
-      <div class="flex justify-center">
-        <!-- Badge duplicado en tamaño: padding, gap, texto y escudo -->
-        <div class="flex items-center gap-6 bg-[#1b2253] text-white px-12 py-6 rounded-3xl shadow">
-          <img
-            src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png"
-            alt="Escudo"
-            class="h-12 sm:h-16 md:h-20 lg:h-24 xl:h-28 w-auto object-contain"
-          />
-          <span class="font-semibold tracking-wide text-center text-sm sm:text-lg md:text-2xl lg:text-3xl">
-            ANÁLISIS DE NUMERACIONES Y MARCAS SERIALES
-          </span>
+      <div class="bg-[#1b2253] text-white rounded-3xl px-8 md:px-12 py-6 md:py-8 shadow flex items-center gap-6">
+        <!-- Escudo -->
+        <img
+          src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png"
+          alt="Escudo"
+          class="h-14 sm:h-20 md:h-24 lg:h-28 w-auto object-contain"
+        />
+        <!-- Título en dos líneas centrado + franja tricolor -->
+        <div class="flex-1">
+          <div class="text-center leading-tight">
+            <div class="font-extrabold tracking-wide text-lg sm:text-2xl md:text-3xl">
+              ANÁLISIS DE NUMERACIONES
+            </div>
+            <div class="font-extrabold tracking-wide text-lg sm:text-2xl md:text-3xl">
+              Y MARCAS SERIALES
+            </div>
+            <div class="mt-3 flex justify-center">
+              <div class="h-1 w-24 bg-[#F5C400] rounded-l"></div>
+              <div class="h-1 w-40 bg-[#2D63C8]"></div>
+              <div class="h-1 w-24 bg-[#D5413B] rounded-r"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
