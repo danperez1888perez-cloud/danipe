@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Análisis de Numeraciones y Marcas Seriales</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- Generador de QR local: evita depender de imágenes externas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <style>
   :root{
     --navy:#1b2253;      /* azul primario */
@@ -20,30 +23,16 @@
   input, select{ border-color: var(--accent) !important; }
   .field-label{ color:#2a2f61 }
 
-  /* ===== QR con logo superpuesto - FIX anti recorte ===== */
+  /* QR normal centrado y grande */
   .qr-wrap{
-    position: relative;
-    display: inline-block;
-    width: 256px;                 /* contenedor explícito */
+    width: 256px;
     height: 256px;
-    overflow: visible;            /* evita recortes */
+    margin: 0 auto;          /* centrado */
   }
-  .qr-wrap img.qr{
-    width: 100%;
-    height: 100%;
+  .qr-wrap canvas, .qr-wrap img{
+    width: 256px;
+    height: 256px;
     display: block;
-  }
-  .qr-wrap img.logo{
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 64px;                  /* ~1/4 del QR */
-    height: 64px;
-    object-fit: contain;
-    border-radius: 8px;
-    background: #fff;             /* bisel blanco para legibilidad */
-    box-shadow: 0 0 0 3px #fff;
   }
 
   @media print{
@@ -56,7 +45,7 @@
 <script>
   /* ===================== CONFIG ===================== */
   const API_URL = "https://script.google.com/macros/s/AKfycbz-XTIxbsLFxhPuJN9L-i8Y9thOwF6UrmB2ewll2YEhrcT7rlUsQycaBbdZxDcgNFZ-WA/exec";
-  const ESCUDO_URL = "https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png";
+  const ESCUDO_HEADER = "https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png";
 
   /* ===================== HELPERS ===================== */
   function todayISO(){ const d=new Date(), p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
@@ -139,10 +128,7 @@
         const r = resp.turno;
         const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
 
-        // QR 256px (UTF-8) para evitar recortes y mejorar lectura
-        const qrURL = "https://chart.googleapis.com/chart?chs=256x256&cht=qr&choe=UTF-8&chl=" + encodeURIComponent(r.id_turno);
-
-        // Comprobante
+        // ====== COMPROBANTE ======
         document.getElementById("receipt").innerHTML = `
           <div class="text-center mb-4">
             <h3 class="text-xl font-bold" style="color:var(--navy)">COMPROBANTE DE TURNO</h3>
@@ -165,14 +151,21 @@
             <div><div class="text-xs uppercase text-slate-500">Placa</div><div class="font-medium">${r.placa}</div></div>
           </div>
 
-          <div class="mt-5 flex items-center gap-4">
-            <div class="qr-wrap" title="Escanee para verificación">
-              <img class="qr" src="${qrURL}" alt="QR">
-              <img class="logo" src="${ESCUDO_URL}" alt="Escudo">
-            </div>
-            <span class="text-xs text-slate-500">Escanee el QR para verificación rápida de turno.</span>
+          <div class="mt-6">
+            <div class="qr-wrap" id="qr"></div>
+            <p class="text-center mt-2 text-xs text-slate-500">Escanee el QR para verificación rápida de turno.</p>
           </div>
         `;
+
+        // Generar el QR normal (sin superponer logo)
+        const qrDiv = document.getElementById("qr");
+        qrDiv.innerHTML = "";
+        new QRCode(qrDiv, {
+          text: r.id_turno,
+          width: 256,
+          height: 256,
+          correctLevel: QRCode.CorrectLevel.M
+        });
 
         document.getElementById("receiptCard").classList.remove("hidden");
         msg.textContent = "Turno registrado y confirmado por email.";
