@@ -108,6 +108,13 @@
     const email = document.querySelector('input[name="email"]');
     const msg   = document.getElementById("msg");
     const btn   = document.getElementById("submitBtn");
+    const printBar = document.getElementById("printBtnBar");
+    const receiptCard = document.getElementById("receiptCard");
+    const receiptDiv  = document.getElementById("receipt");
+
+    // Estado inicial: ocultar comprobante y botón imprimir
+    receiptCard.classList.add("hidden");
+    printBar.classList.add("hidden");
 
     fecha.value = todayISO();
     fecha.min   = todayISO();
@@ -124,6 +131,11 @@
       ev.preventDefault();
       msg.textContent = "";
       msg.className   = "text-sm text-green-700";
+
+      // Al enviar, ocultar por si estaba visible de un registro previo
+      receiptCard.classList.add("hidden");
+      printBar.classList.add("hidden");
+      receiptDiv.innerHTML = "";
 
       if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())){
         msg.textContent = "Ingresa un correo válido.";
@@ -208,7 +220,10 @@
           </div>
         `;
 
-        document.getElementById("receiptCard").classList.remove("hidden");
+        // Mostrar comprobante y habilitar botón imprimir
+        receiptCard.classList.remove("hidden");
+        printBar.classList.remove("hidden");
+
         msg.textContent = "Turno registrado y confirmado por email.";
 
         const fechaReservada = r.fecha;
@@ -258,7 +273,7 @@
             </div>
           </div>
         </div>
-        <!-- Columna derecha vacía: evita que el marco azul se extienda -->
+        <!-- Columna derecha vacía -->
         <div class="hidden md:block"></div>
       </div>
     </div>
@@ -309,15 +324,15 @@
     </aside>
   </main>
 
-  <!-- ====== SOLO COMPROBANTE ====== -->
-  <section id="receiptCard" class="px-4 pb-6">
+  <!-- ====== SOLO COMPROBANTE (oculto hasta registrar) ====== -->
+  <section id="receiptCard" class="px-4 pb-6 hidden">
     <div id="printable">
       <div id="receipt"></div>
     </div>
   </section>
 
-  <!-- Botón imprimir (no imprime) -->
-  <div class="fixed bottom-3 left-0 right-0 flex justify-center gap-3 no-print">
+  <!-- Botón imprimir: oculto hasta que haya comprobante -->
+  <div id="printBtnBar" class="fixed bottom-3 left-0 right-0 flex justify-center gap-3 no-print hidden">
     <button class="primary px-5 py-2 text-sm font-semibold shadow" onclick="window.print()">IMPRIMIR COMPROBANTE</button>
   </div>
 
@@ -326,4 +341,3 @@
   </footer>
 </body>
 </html>
-
