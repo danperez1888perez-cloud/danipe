@@ -14,13 +14,12 @@
   body{ background:#f5f7fb; }
 
   /* ===================== HOJA A4 (1 página) ===================== */
-  @page{ size:A4; margin:10mm; } /* Para quitar el “https:// … / número de página”, desmarca “Encabezados y pies de página” en el diálogo de impresión */
+  @page{ size:A4; margin:10mm; } /* desmarca “Encabezados y pies de página” en el diálogo de impresión */
 
   .sheet{ width:190mm; margin:0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
   .sheet-head{ background:var(--navy); color:#fff; text-align:center; padding:8mm 8mm 6mm; }
   .sheet-head h1{ margin:0; font-size:15pt; font-weight:800; letter-spacing:.02em; }
   .sheet-head .sub{ margin-top:2mm; font-size:9pt; color:#dbe3ff; }
-
   .sheet-body{ position:relative; padding:8mm; }
 
   /* Marca de agua */
@@ -42,14 +41,11 @@
     box-shadow: 0 0 0 2px rgba(59,130,246,.08);
     font-size:10pt; line-height:1.25; word-break:break-word;
   }
-
   .escudo{ margin-top:8mm; display:flex; justify-content:center; }
   .escudo img{ height:22mm; width:auto; }
 
-  /* Centrado del comprobante en pantalla y en impresión */
-  #printable{
-    display:flex; justify-content:center; /* centra horizontalmente */
-  }
+  /* Centrar el comprobante en pantalla e impresión */
+  #printable{ display:flex; justify-content:center; }
   @media print{
     body *{ visibility:hidden; }
     #printable, #printable *{ visibility:visible; }
@@ -59,7 +55,7 @@
     .watermark::after{ opacity:.06; background-size:560px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
 
-  /* Formulario/estilos existentes */
+  /* Formulario / botones */
   .primary{ background:var(--navy); color:#fff; border-radius:12px; transition:.2s }
   .primary:hover{ background:var(--navy-2) }
   input,select{ border-color:#d6dafe !important }
@@ -232,16 +228,18 @@
 </head>
 <body>
 
-  <!-- CABECERA: 100% más grande -->
+  <!-- CABECERA 100% MÁS GRANDE -->
   <header class="px-4 pt-6 no-print">
     <div class="max-w-6xl mx-auto">
       <div class="flex justify-center">
-        <div class="flex items-center gap-4 bg-[#1b2253] text-white px-7 py-4 rounded-2xl shadow">
-          <!-- antes h-7; ahora h-14 (100% más grande) -->
-          <img src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png"
-               alt="Escudo" class="h-14 w-auto object-contain" />
-          <!-- tipografía más grande -->
-          <span class="font-semibold tracking-wide text-center text-base sm:text-lg md:text-xl">
+        <!-- Badge duplicado en tamaño: padding, gap, texto y escudo -->
+        <div class="flex items-center gap-6 bg-[#1b2253] text-white px-12 py-6 rounded-3xl shadow">
+          <img
+            src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png"
+            alt="Escudo"
+            class="h-12 sm:h-16 md:h-20 lg:h-24 xl:h-28 w-auto object-contain"
+          />
+          <span class="font-semibold tracking-wide text-center text-sm sm:text-lg md:text-2xl lg:text-3xl">
             ANÁLISIS DE NUMERACIONES Y MARCAS SERIALES
           </span>
         </div>
@@ -252,7 +250,7 @@
   <!-- FORM + STATS (no imprimen) -->
   <main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-3 gap-6 no-print">
     <section class="bg-white border rounded-xl p-6 md:col-span-2">
-      <h2 class="text-xl font-semibold mb-4" style="color:var(--navy)">Registrar turno</h2>
+      <h2 class="text-xl font-semibold mb-4" style="color:#1b2253">Registrar turno</h2>
       <form id="turno-form" class="grid grid-cols-1 gap-4">
         <label class="text-sm field-label">Oficio<span class="text-red-500">*</span>
           <input name="oficio" class="mt-1 w-full rounded-lg border px-3 py-2" required>
@@ -289,7 +287,7 @@
     </section>
 
     <aside class="bg-white border rounded-xl p-6">
-      <h3 class="text-lg font-semibold mb-2" style="color:var(--navy)">Disponibilidad del día</h3>
+      <h3 class="text-lg font-semibold mb-2" style="color:#1b2253">Disponibilidad del día</h3>
       <div id="stats" class="text-sm">Cargando…</div>
     </aside>
   </main>
