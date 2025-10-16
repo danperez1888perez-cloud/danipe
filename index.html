@@ -19,6 +19,18 @@
   .primary:hover{ background: var(--navy-2); }
   input, select{ border-color: var(--accent) !important; }
   .field-label{ color:#2a2f61 }
+
+  /* QR con logo superpuesto */
+  .qr-wrap { position: relative; display: inline-block; }
+  .qr-wrap img.qr { width: 140px; height: 140px; display:block; }
+  .qr-wrap img.logo {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 46px; height: 46px; object-fit: contain;
+    border-radius: 6px; background: #fff; /* borde blanco para contraste */
+    box-shadow: 0 0 0 2px #fff;
+  }
+
   @media print{
     body *{ visibility:hidden; }
     #printable, #printable *{ visibility:visible; }
@@ -28,6 +40,7 @@
 <script>
   /* ===================== CONFIG ===================== */
   const API_URL = "https://script.google.com/macros/s/AKfycbz-XTIxbsLFxhPuJN9L-i8Y9thOwF6UrmB2ewll2YEhrcT7rlUsQycaBbdZxDcgNFZ-WA/exec";
+  const ESCUDO_URL = "https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png";
 
   /* ===================== HELPERS ===================== */
   function todayISO(){ const d=new Date(), p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
@@ -111,36 +124,44 @@
         const r = resp.turno;
         const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
 
-        // QR opcional
-        const qrURL = "https://chart.googleapis.com/chart?chs=160x160&cht=qr&chl=" + encodeURIComponent(r.id_turno);
+        // QR (con escudo superpuesto)
+        const qrURL = "https://chart.googleapis.com/chart?chs=180x180&cht=qr&chl=" + encodeURIComponent(r.id_turno);
 
-        // comprobante
+        // ====== COMPROBANTE ======
         document.getElementById("receipt").innerHTML = `
           <div class="text-center mb-4">
             <h3 class="text-xl font-bold" style="color:var(--navy)">COMPROBANTE DE TURNO</h3>
-            <p class="text-sm text-slate-600">Confirmación enviada a <b>${r.email}</b>. Presenta este comprobante el día de tu pericia.</p>
+            <p class="text-sm text-slate-600">Confirmación enviada a <b>${r.email}</b>. Presente este comprobante el día de su pericia.</p>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-3 text-sm">
             <div><div class="text-xs uppercase text-slate-500">Correo</div><div class="font-medium">${r.email}</div></div>
             <div><div class="text-xs uppercase text-slate-500">ID turno</div><div class="font-medium">${r.id_turno}</div></div>
+
             <div><div class="text-xs uppercase text-slate-500">Fecha</div><div class="font-medium">${r.fecha}</div></div>
             <div><div class="text-xs uppercase text-slate-500">Horario</div><div class="font-medium">${slot}</div></div>
+
             <div><div class="text-xs uppercase text-slate-500">Oficio</div><div class="font-medium">${r.oficio}</div></div>
             <div><div class="text-xs uppercase text-slate-500">N° Inv./Instr. Fiscal</div><div class="font-medium">${r.numeroInvestigacion}</div></div>
+
             <div><div class="text-xs uppercase text-slate-500">Fiscal solicitante</div><div class="font-medium">${r.fiscal}</div></div>
             <div><div class="text-xs uppercase text-slate-500">Propietario</div><div class="font-medium">${r.propietario}</div></div>
-            <div><div class="text-xs uppercase text-slate-500">Placa</div><div class="font-medium">${r.placa}</div></div>
-            <div><div class="text-xs uppercase text-slate-500">Creado en</div><div class="font-medium">${r.creadoEn}</div></div>
-          </div>
-          <div class="mt-4 flex items-center gap-4">
-            <img src="${qrURL}" alt="QR" class="border rounded p-1"/>
-            <span class="text-xs text-slate-500">Escanee el QR para verificación rápida de turno.</span>
-          </div>`;
-        document.getElementById("receiptCard").classList.remove("hidden");
 
+            <div><div class="text-xs uppercase text-slate-500">Placa</div><div class="font-medium">${r.placa}</div></div>
+          </div>
+
+          <div class="mt-5 flex items-center gap-4">
+            <div class="qr-wrap" title="Escanee para verificación">
+              <img class="qr" src="${qrURL}" alt="QR">
+              <img class="logo" src="${ESCUDO_URL}" alt="Escudo">
+            </div>
+            <span class="text-xs text-slate-500">Escanee el QR para verificación rápida de turno.</span>
+          </div>
+        `;
+        document.getElementById("receiptCard").classList.remove("hidden");
         msg.textContent = "Turno registrado y confirmado por email.";
 
-        // Mantener fecha y refrescar stats
+        // mantener fecha y refrescar stats
         const fechaReservada = r.fecha;
         form.reset();
         fecha.value = fechaReservada;
@@ -160,16 +181,13 @@
 </head>
 <body class="min-h-screen">
 
-  <!-- ENCABEZADO ÚNICO CENTRADO CON NUEVO ESCUDO -->
+  <!-- ENCABEZADO ÚNICO CENTRADO CON ESCUDO -->
   <header class="px-4 pt-6">
     <div class="max-w-6xl mx-auto">
       <div class="flex justify-center">
         <div class="flex items-center gap-3 bg-[#1b2253] text-white px-5 py-3 rounded-xl shadow">
-          <img
-            src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png"
-            alt="Escudo"
-            class="h-7 w-7 object-contain"
-          />
+          <img src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png"
+               alt="Escudo" class="h-7 w-7 object-contain" />
           <span class="font-semibold tracking-wide text-center text-[12px] sm:text-sm md:text-base">
             ANÁLISIS DE NUMERACIONES Y MARCAS SERIALES
           </span>
