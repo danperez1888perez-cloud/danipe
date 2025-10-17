@@ -5,87 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Análisis de Numeraciones y Marcas Seriales</title>
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Favicon + Theme -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='10' fill='%231b2253'/%3E%3Ctext x='50%25' y='58%25' font-size='36' text-anchor='middle' fill='white' font-family='Arial,Helvetica,sans-serif'%3EAN%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#1b2253">
-
 <style>
-  :root{
-    --navy:#1b2253;
-    --navy-2:#232b6b;
-  }
+  :root{ --navy:#1b2253; --navy-2:#232b6b; }
   body{ background:#f5f7fb; }
 
-  /* ===================== HOJA A4 (1 página) ===================== */
-  .sheet{
-    width:180mm;              /* ajustado para verse como la captura */
-    margin:0 auto;
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius:12px;
-    overflow:hidden;
-  }
-  .sheet-head{
-    background:#1b2253;       /* navy sólido */
-    color:#fff;
-    text-align:center;
-    padding:10mm 8mm 6mm;
-  }
+  .sheet{ width:180mm; margin:0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
+  .sheet-head{ background:#1b2253; color:#fff; text-align:center; padding:10mm 8mm 6mm; }
   .sheet-head h1{ margin:0; font-size:18pt; font-weight:800; letter-spacing:.02em; }
   .sheet-head .sub{ margin-top:2mm; font-size:9.5pt; color:#dbe3ff; }
   .sheet-body{ position:relative; padding:10mm 8mm 6mm; }
-
-  /* Dos columnas */
   .display-grid{ display:grid; grid-template-columns:1fr 1fr; column-gap:8mm; row-gap:10mm; }
-
   .label{ font-size:10pt; color:#0f172a; margin-bottom:3mm; display:inline-flex; align-items:center; gap:2mm; }
-  .box{
-    background:#fff; border:1px solid #cfe0ff; border-radius:10px;
-    padding:4mm 5mm; min-height:14mm;
-    font-weight:600; color:#0f172a; font-size:10.5pt; line-height:1.25; word-break:break-word;
-    box-shadow: 0 0 0 2px rgba(59,130,246,.08);
-  }
-
+  .box{ background:#fff; border:1px solid #cfe0ff; border-radius:10px; padding:4mm 5mm; min-height:14mm; font-weight:600; color:#0f172a; font-size:10.5pt; line-height:1.25; word-break:break-word; box-shadow: 0 0 0 2px rgba(59,130,246,.08); }
   .escudo{ margin-top:10mm; display:flex; justify-content:center; }
   .escudo img{ height:26mm; width:auto; }
+  .sheet-body .footer-note{ margin-top:12mm; padding-top:4mm; border-top:1px solid #e5e7eb; font-size:10pt; color:#6b7280; text-align:left; }
 
-  .sheet-body .footer-note{
-    margin-top:12mm; padding-top:4mm; border-top:1px solid #e5e7eb;
-    font-size:10pt; color:#6b7280; text-align:left;
-  }
-
-  /* Marca de agua */
   .watermark{ position:relative; }
-  .watermark::after{
-    content:""; position:absolute; inset:0;
-    background:center/120mm no-repeat; opacity:.07; z-index:1; pointer-events:none;
-    background-image: var(--wm-url); transform:rotate(-10deg);
-  }
+  .watermark::after{ content:""; position:absolute; inset:0; background:center/120mm no-repeat; opacity:.07; z-index:1; pointer-events:none; background-image: var(--wm-url); transform:rotate(-10deg); }
   .wm-content{ position:relative; z-index:2; }
-
-  /* Centrado del comprobante en pantalla/print */
   #printable{ display:flex; justify-content:center; }
 
-  /* Foco accesible + errores (form) */
   input, select { outline:none; }
   input:focus, select:focus { box-shadow: 0 0 0 3px rgba(59,130,246,.18); border-color: #60a5fa !important; }
   .input-error { border-color:#ef4444 !important; box-shadow:0 0 0 3px rgba(239,68,68,.15) !important; }
   .help-error { font-size:12px; color:#dc2626; margin-top:4px; display:none; }
   .help-error.show { display:block; }
 
-  /* Botones / inputs */
   .primary{ background:var(--navy); color:#fff; border-radius:12px; transition:.2s }
   .primary:hover{ background:var(--navy-2) }
   input,select{ border-color:#d6dafe !important }
   .field-label{ color:#2a2f61 }
 
-  /* Encabezado sticky */
-  @media (min-width: 768px){
-    /* nada extra */
-  }
-
-  /* Impresión */
   @page{ size:A4; margin:10mm; }
   @media print{
     html, body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; background:#fff; }
@@ -99,7 +52,6 @@
     .sheet-head{ background:#1b2253; color:#fff; border-bottom:none; }
   }
 
-  /* (6) Modo oscuro */
   @media (prefers-color-scheme: dark){
     body{ background:#0f1528; }
     .primary{ background:#0f173d; color:#e6e9ff; }
@@ -115,19 +67,15 @@
 <!-- TOASTS -->
 <div id="toastRoot" class="fixed top-4 right-4 z-40 space-y-2 no-print"></div>
 
-<!-- HEADER STICKY RECORTADO -->
+<!-- HEADER -->
 <header class="no-print sticky top-0 z-20">
   <div class="bg-[#1b2253] text-white">
     <div class="max-w-6xl mx-auto px-4 pt-4 pb-2">
       <div class="grid md:grid-cols-3 gap-6">
-        <!-- Marco azul solo hasta la columna izquierda -->
         <div class="md:col-span-2">
           <div id="headerCard" class="bg-[#1b2253] text-white rounded-2xl px-6 md:px-8 py-4 md:py-5 transition-shadow">
             <div class="flex items-center justify-center gap-3 md:gap-4">
-              <img
-                src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png"
-                alt="Escudo" class="h-16 sm:h-20 md:h-24 lg:h-28 w-auto object-contain"
-              />
+              <img src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png" alt="Escudo" class="h-16 sm:h-20 md:h-24 lg:h-28 w-auto object-contain"/>
               <div class="text-center leading-snug">
                 <div class="font-extrabold tracking-wide text-sm sm:text-lg md:text-xl">ANÁLISIS DE NUMERACIONES</div>
                 <div class="font-extrabold tracking-wide text-sm sm:text-lg md:text-xl">Y MARCAS SERIALES</div>
@@ -139,8 +87,7 @@
               </div>
             </div>
           </div>
-        </div>
-        <div class="hidden md:block"></div>
+        </div><div class="hidden md:block"></div>
       </div>
     </div>
   </div>
@@ -154,30 +101,22 @@
       <label class="text-sm field-label">Oficio<span class="text-red-500">*</span>
         <input name="oficio" class="mt-1 w-full rounded-lg border px-3 py-2" required>
       </label>
-
       <label class="text-sm field-label">N° Investigación Previa / Instrucción Fiscal<span class="text-red-500">*</span>
         <input name="numeroInvestigacion" class="mt-1 w-full rounded-lg border px-3 py-2" required>
       </label>
-
       <label class="text-sm field-label">Fiscal solicitante<span class="text-red-500">*</span>
         <input name="fiscal" class="mt-1 w-full rounded-lg border px-3 py-2" required>
       </label>
-
       <label class="text-sm field-label">Propietario del vehículo<span class="text-red-500">*</span>
         <input name="propietario" class="mt-1 w-full rounded-lg border px-3 py-2" required>
       </label>
 
-      <!-- Placa: autos y motos -->
+      <!-- Placa autos y motos -->
       <label class="text-sm field-label">Placa<span class="text-red-500">*</span>
-        <input
-          id="inpPlaca"
-          name="placa"
-          class="mt-1 w-full rounded-lg border px-3 py-2 uppercase"
-          placeholder="Autos: ABC-123 / ABC-1234 · Motos: AB123C (o AB-123C)"
-          pattern="(?:[A-Za-z]{3}-?\d{3,4}|[A-Za-z]{2}-?\d{3}[A-Za-z])"
-          title="Autos: ABC-123 o ABC-1234 · Motos: AB123C o AB-123C"
-          required
-        >
+        <input id="inpPlaca" name="placa" class="mt-1 w-full rounded-lg border px-3 py-2 uppercase"
+               placeholder="Autos: ABC-123 / ABC-1234 · Motos: AB123C (o AB-123C)"
+               pattern="(?:[A-Za-z]{3}-?\d{3,4}|[A-Za-z]{2}-?\d{3}[A-Za-z])"
+               title="Autos: ABC-123 o ABC-1234 · Motos: AB123C o AB-123C" required>
         <p id="errPlaca" class="help-error">Formato de placa inválido (Autos: ABC-123 / ABC-1234 · Motos: AB123C).</p>
       </label>
 
@@ -199,9 +138,7 @@
         </label>
       </div>
 
-      <!-- Botón con spinner -->
-      <button id="submitBtn"
-        class="primary w-full py-3 mt-2 text-sm font-semibold shadow disabled:opacity-70 disabled:pointer-events-none">
+      <button id="submitBtn" class="primary w-full py-3 mt-2 text-sm font-semibold shadow disabled:opacity-70 disabled:pointer-events-none">
         <span class="inline-flex items-center gap-2">
           <svg id="btnSpinner" class="hidden animate-spin h-4 w-4" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -237,86 +174,79 @@
   Sistema de turnos • Uso institucional
 </footer>
 
+<!-- ===== Modal secreto (Ctrl+Alt+A) ===== -->
+<div id="adminModal" class="fixed inset-0 z-[100] hidden no-print">
+  <div class="absolute inset-0 bg-black/50"></div>
+  <div class="relative mx-auto mt-[15vh] w-[92%] max-w-md rounded-2xl bg-white p-6 shadow-xl">
+    <h3 class="text-lg font-semibold text-slate-800">Acceso administrador</h3>
+    <p class="mt-1 text-sm text-slate-600">Ingresa el código secreto para abrir el panel.</p>
+
+    <label class="block mt-4 text-sm">
+      Código
+      <input id="adminCode" type="password" class="mt-1 w-full rounded-lg border px-3 py-2" placeholder="•••••••••" autofocus>
+    </label>
+    <p id="adminErr" class="mt-2 text-sm text-red-600 hidden">Código incorrecto.</p>
+
+    <div class="mt-5 flex justify-end gap-2">
+      <button id="adminCancel" class="px-4 py-2 rounded-lg border">Cancelar</button>
+      <button id="adminOk" class="px-4 py-2 rounded-lg text-white" style="background:#1b2253">Entrar</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  /* ===================== CONFIG ===================== */
-  const API_URL = "https://script.google.com/macros/s/AKfycbz-XTIxbsLFxhPuJN9L-i8Y9thOwF6UrmB2ewll2YEhrcT7rlUsQycaBbdZxDcgNFZ-WA/exec";
+  /* ====== CONFIG ====== */
+  const API_URL = "https://script.google.com/macros/s/AKfycbzhetKZv0QKknHmXA6UsEa8TFdRCJu6puT21jK_1EOxAT3NpXQcwN07A4nweJhMZdPiSw/exec";
   const ESCUDO_HEADER = "https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png";
   const WATERMARK_URL = "https://drive.google.com/uc?export=view&id=1k4OrJhFAHMbi7I3Um853TME_BcrTNu-4";
-  const SHOW_QR = false; // cambia a true si quieres QR
 
-  /* ===================== HELPERS ===================== */
-  const p2=n=>String(n).padStart(2,"0");
-  function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`; }
-
-  async function postJSONCompat(payload){
-    try{ const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)}); return await r.json(); }
-    catch{}
-    const body="payload="+encodeURIComponent(JSON.stringify(payload));
-    const r2=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body});
-    return await r2.json();
-  }
-  async function getStats(fecha){ const r=await fetch(`${API_URL}?action=stats&fecha=${encodeURIComponent(fecha)}`); return await r.json(); }
-
-  // TOASTS
+  /* ====== HELPERS ====== */
   function showToast(msg, type="success", ms=3500){
     const root = document.getElementById("toastRoot");
     const box = document.createElement("div");
     const colors = type==="success" ? "bg-emerald-600" : type==="error" ? "bg-red-600" : "bg-slate-800";
     box.className = `${colors} text-white rounded-lg shadow px-4 py-2 text-sm transition transform duration-300 translate-y-[-8px] opacity-0`;
-    box.textContent = msg;
-    root.appendChild(box);
+    box.textContent = msg; root.appendChild(box);
     requestAnimationFrame(()=>{ box.style.opacity=1; box.style.transform="translateY(0)"; });
     setTimeout(()=>{ box.style.opacity=0; box.style.transform="translateY(-8px)"; setTimeout(()=>box.remove(),300); }, ms);
   }
-
-  // Spinner
   function setSubmitting(isOn){
-    const btn = document.getElementById("submitBtn");
-    const spin = document.getElementById("btnSpinner");
-    btn.disabled = isOn;
-    if (spin) spin.classList.toggle("hidden", !isOn);
+    const btn=document.getElementById("submitBtn"); const spin=document.getElementById("btnSpinner");
+    btn.disabled=isOn; if (spin) spin.classList.toggle("hidden", !isOn);
   }
+  async function postJSONCompat(payload){
+    try{ const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)}); return await r.json(); }
+    catch{}
+    const body="payload="+encodeURIComponent(JSON.stringify(payload));
+    const r2=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body}); return await r2.json();
+  }
+  async function getStats(fecha){ const r=await fetch(`${API_URL}?action=stats&fecha=${encodeURIComponent(fecha)}`); return await r.json(); }
 
-  // Disponibilidad
   function renderStatsBox(stats){
     const box=document.getElementById("stats");
     if(!stats.ok){ box.innerHTML=`<div class="text-red-600 text-sm">${stats.error||"No se pudo obtener disponibilidad"}</div>`; return; }
     const s=stats.stats;
     const fmt=id=>id==="08:00-10:00"?"08:00 – 10:00":"10:30 – 12:00";
-
     const rows=s.slots.map(x=>{
       const chip = x.remaining ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700";
-      return `
-        <div class="flex items-center justify-between rounded-lg border px-3 py-2">
-          <div>
-            <div class="font-medium text-slate-800">${fmt(x.slotId)}</div>
-            <div class="text-[11px] text-slate-500">Usados: ${x.used} / ${x.capacity}</div>
-          </div>
-          <span class="text-[11px] px-2 py-1 rounded-full ${chip}">
-            ${x.remaining} disp.
-          </span>
-        </div>`;
+      return `<div class="flex items-center justify-between rounded-lg border px-3 py-2">
+        <div><div class="font-medium text-slate-800">${fmt(x.slotId)}</div>
+        <div class="text-[11px] text-slate-500">Usados: ${x.used} / ${x.capacity}</div></div>
+        <span class="text-[11px] px-2 py-1 rounded-full ${chip}">${x.remaining} disp.</span></div>`;
     }).join("");
-
     const pct = s.totalDia ? Math.round(100*s.usadosDia/s.totalDia) : 0;
     const barColor = s.remainingDay ? "bg-emerald-500" : "bg-red-500";
-
-    box.innerHTML=`
-      <div class="text-sm text-slate-700">Fecha: <strong>${s.fecha}</strong></div>
+    box.innerHTML=`<div class="text-sm text-slate-700">Fecha: <strong>${s.fecha}</strong></div>
       <div class="mt-3 space-y-2">${rows}</div>
       <div class="mt-3 text-xs text-slate-600">Ocupación total del día: ${s.usadosDia} / ${s.totalDia} (${pct}%)</div>
-      <div class="mt-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-        <div class="${barColor} h-2" style="width:${pct}%;"></div>
-      </div>
+      <div class="mt-1 bg-slate-100 rounded-full h-2 overflow-hidden"><div class="${barColor} h-2" style="width:${pct}%;"></div></div>
       <div class="mt-2 rounded-lg px-3 py-2 text-sm font-semibold ${s.remainingDay===0?"bg-red-50 text-red-700":"bg-emerald-50 text-emerald-700"}">
-        Total del día: ${s.usadosDia} / ${s.totalDia} (restan ${s.remainingDay})
-      </div>`;
+        Total del día: ${s.usadosDia} / ${s.totalDia} (restan ${s.remainingDay})</div>`;
   }
 
   // Sombra header
   window.addEventListener("scroll", ()=>{
-    const card = document.getElementById("headerCard");
-    card.classList.toggle("shadow-md", (window.scrollY||0) > 8);
+    document.getElementById("headerCard").classList.toggle("shadow-md", (window.scrollY||0) > 8);
   }, {passive:true});
 
   document.addEventListener("DOMContentLoaded", ()=>{
@@ -329,52 +259,34 @@
     const receiptCard = document.getElementById("receiptCard");
     const receiptDiv  = document.getElementById("receipt");
 
-    // Estado inicial
-    receiptCard.classList.add("hidden");
-    printBar.classList.add("hidden");
+    receiptCard.classList.add("hidden"); printBar.classList.add("hidden");
 
-    // Fecha mínima = hoy
-    const d = new Date();
-    const tISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-    fecha.value = tISO; fecha.min = tISO;
+    const d=new Date(); const tISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    fecha.value=tISO; fecha.min=tISO;
 
     const refreshStats = async () => {
       document.getElementById("stats").textContent = "Cargando...";
-      try { renderStatsBox(await getStats(fecha.value)); }
-      catch(e){ document.getElementById("stats").textContent = e.message || "Error al consultar"; }
+      try { renderStatsBox(await getStats(fecha.value)); } catch(e){ document.getElementById("stats").textContent = e.message || "Error al consultar"; }
     };
-    refreshStats();
-    fecha.addEventListener("change", refreshStats);
+    refreshStats(); fecha.addEventListener("change", refreshStats);
 
-    // Validación en vivo (autos y motos)
     const rePlaca = /^(?:[A-Za-z]{3}-?\d{3,4}|[A-Za-z]{2}-?\d{3}[A-Za-z])$/;
     const reEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const errPlaca = document.getElementById("errPlaca");
     const errEmail = document.getElementById("errEmail");
 
     function valLive(el, errEl, testFn){
-      const ok = testFn(el.value.trim());
-      el.classList.toggle("input-error", !ok);
-      errEl.classList.toggle("show", !ok);
-      return ok;
+      const ok=testFn(el.value.trim());
+      el.classList.toggle("input-error", !ok); errEl.classList.toggle("show", !ok); return ok;
     }
     const vPlaca = ()=> valLive(placa, errPlaca, v=>rePlaca.test(v));
     const vEmail = ()=> valLive(email, errEmail, v=>reEmail.test(v));
-    placa.addEventListener("input", vPlaca);
-    email.addEventListener("input", vEmail);
+    placa.addEventListener("input", vPlaca); email.addEventListener("input", vEmail);
 
     form.addEventListener("submit", async (ev)=>{
-      ev.preventDefault();
-      msg.textContent = ""; msg.className = "text-sm text-green-700";
-
-      receiptCard.classList.add("hidden");
-      printBar.classList.add("hidden");
-      receiptDiv.innerHTML = "";
-
-      if(!vPlaca() | !vEmail()){
-        showToast("Revisa los campos marcados.","error");
-        return;
-      }
+      ev.preventDefault(); msg.textContent = ""; msg.className = "text-sm text-green-700";
+      receiptCard.classList.add("hidden"); printBar.classList.add("hidden"); receiptDiv.innerHTML = "";
+      if(!vPlaca() | !vEmail()){ showToast("Revisa los campos marcados.","error"); return; }
 
       const fd = new FormData(form);
       const payload = Object.fromEntries(fd.entries());
@@ -389,10 +301,8 @@
         const r = resp.turno;
         const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
 
-        // ===== COMPROBANTE =====
+        // Render comprobante
         const verifyUrl = location.href.split("#")[0] + "?id=" + encodeURIComponent(r.id_turno);
-        const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=110x110&chl=${encodeURIComponent(verifyUrl)}`;
-
         receiptDiv.style.setProperty("--wm-url", `url("${WATERMARK_URL}")`);
         receiptDiv.innerHTML = `
           <div class="sheet watermark">
@@ -400,7 +310,6 @@
               <h1>COMPROBANTE DE TURNO</h1>
               <div class="sub">Confirmación enviada a <b>${r.email}</b>. Presente este comprobante el día de su pericia.</div>
             </div>
-
             <div class="sheet-body wm-content">
               <div class="display-grid">
                 <div class="space-y-4">
@@ -410,7 +319,6 @@
                   <div class="group"><div class="label">Fiscal solicitante</div><div class="box">${r.fiscal}</div></div>
                   <div class="group"><div class="label">Placa</div><div class="box">${r.placa}</div></div>
                 </div>
-
                 <div class="space-y-4">
                   <div class="group"><div class="label">ID turno</div><div class="box">${r.id_turno}</div></div>
                   <div class="group"><div class="label">Horario</div><div class="box">${slot}</div></div>
@@ -418,31 +326,18 @@
                   <div class="group"><div class="label">Propietario</div><div class="box">${r.propietario}</div></div>
                 </div>
               </div>
-
-              ${SHOW_QR ? `
-              <div class="mt-6 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <img src="${qrUrl}" alt="QR" class="h-[28mm] w-[28mm] border rounded-md p-1 bg-white"/>
-                  <div class="text-[11px] text-slate-600">Escanee para verificar el turno<br><span class="text-slate-800 font-medium">ID: ${r.id_turno}</span></div>
-                </div>
-                <div class="escudo"><img src="${ESCUDO_HEADER}" alt="Escudo"></div>
-              </div>` : `
-              <div class="escudo"><img src="${ESCUDO_HEADER}" alt="Escudo"></div>`}
-
+              <div class="escudo"><img src="${ESCUDO_HEADER}" alt="Escudo"></div>
               <div class="footer-note">Dirección de Criminalística • Análisis de Numeraciones y Marcas Seriales</div>
             </div>
           </div>
         `;
 
-        // Mostrar comprobante e imprimir
-        receiptCard.classList.remove("hidden");
-        printBar.classList.remove("hidden");
-
+        document.getElementById("receiptCard").classList.remove("hidden");
+        document.getElementById("printBtnBar").classList.remove("hidden");
         showToast("Turno registrado y confirmado por email.","success");
 
         const fechaReservada = r.fecha;
-        form.reset();
-        fecha.value = fechaReservada;
+        form.reset(); fecha.value = fechaReservada;
         document.getElementById("stats").textContent = "Cargando...";
         renderStatsBox(await getStats(fecha.value));
 
@@ -455,6 +350,27 @@
       }
     });
   });
+
+  // ====== Modal Admin secreto (Ctrl+Alt+A) ======
+  const SECRET_CODE = 'Admin123'; // MISMO que ADMIN_TOKEN en Script Properties
+  const adminModal  = document.getElementById('adminModal');
+  const adminCode   = document.getElementById('adminCode');
+  const adminErr    = document.getElementById('adminErr');
+  const btnCancel   = document.getElementById('adminCancel');
+  const btnOk       = document.getElementById('adminOk');
+
+  function openAdminModal(){ adminErr.classList.add('hidden'); adminCode.value=''; adminModal.classList.remove('hidden'); setTimeout(()=>adminCode.focus(),50); }
+  function closeAdminModal(){ adminModal.classList.add('hidden'); }
+  document.addEventListener('keydown', (e)=>{ if (e.ctrlKey && e.altKey && (e.key==='a'||e.key==='A')){ e.preventDefault(); openAdminModal(); }});
+  btnCancel.addEventListener('click', closeAdminModal);
+  function submitAdmin(){
+    const value = (adminCode.value || '').trim();
+    if (value === SECRET_CODE){ sessionStorage.setItem('ADMIN_TOKEN', SECRET_CODE); closeAdminModal(); window.location.href='admin.html'; }
+    else { adminErr.classList.remove('hidden'); }
+  }
+  btnOk.addEventListener('click', submitAdmin);
+  adminCode.addEventListener('keydown', (e)=>{ if (e.key==='Enter') submitAdmin(); });
+  adminModal.addEventListener('click', (ev)=>{ if (ev.target === adminModal) closeAdminModal(); });
 </script>
 </body>
 </html>
