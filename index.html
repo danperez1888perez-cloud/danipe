@@ -6,6 +6,10 @@
 <title>Análisis de Numeraciones y Marcas Seriales</title>
 <script src="https://cdn.tailwindcss.com"></script>
 
+<!-- Favicon + Theme (10) -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='10' fill='%231b2253'/%3E%3Ctext x='50%25' y='58%25' font-size='36' text-anchor='middle' fill='white' font-family='Arial,Helvetica,sans-serif'%3EAN%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#1b2253">
+
 <style>
   :root{
     --navy:#1b2253;
@@ -14,7 +18,7 @@
   body{ background:#f5f7fb; }
 
   /* ===================== HOJA A4 (1 página) ===================== */
-  @page{ size:A4; margin:10mm; } /* Desmarca “Encabezados y pies de página” al imprimir */
+  @page{ size:A4; margin:10mm; } /* En el diálogo de impresión, desmarcar encabezados y pies */
 
   .sheet{ width:190mm; margin:0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
   .sheet-head{ background:var(--navy); color:#fff; text-align:center; padding:8mm 8mm 6mm; }
@@ -47,6 +51,16 @@
   /* Centrar el comprobante en pantalla e impresión */
   #printable{ display:flex; justify-content:center; }
 
+  /* Foco accesible (2) */
+  input, select { outline:none; }
+  input:focus, select:focus {
+    box-shadow: 0 0 0 3px rgba(59,130,246,.18);
+    border-color: #60a5fa !important;
+  }
+  .input-error { border-color:#ef4444 !important; box-shadow:0 0 0 3px rgba(239,68,68,.15) !important; }
+  .help-error { font-size:12px; color:#dc2626; margin-top:4px; display:none; }
+  .help-error.show { display:block; }
+
   @media print{
     body *{ visibility:hidden; }
     #printable, #printable *{ visibility:visible; }
@@ -54,203 +68,43 @@
     .sheet, .sheet *{ page-break-inside:avoid; break-inside:avoid; }
     .no-print{ display:none !important; }
     .watermark::after{ opacity:.06; background-size:560px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+    /* (9) Impresión refinada */
+    body{ font-family: "Times New Roman", Georgia, serif; }
+    .sheet-head{ background:#fff; color:#111; border-bottom:1px solid #999; }
+    .box{ border-color:#999; box-shadow:none; }
   }
 
-  /* Formulario / botones */
+  /* Botones / inputs */
   .primary{ background:var(--navy); color:#fff; border-radius:12px; transition:.2s }
   .primary:hover{ background:var(--navy-2) }
   input,select{ border-color:#d6dafe !important }
   .field-label{ color:#2a2f61 }
+
+  /* (6) Modo oscuro automático */
+  @media (prefers-color-scheme: dark){
+    body{ background:#0f1528; }
+    .primary{ background:#0f173d; color:#e6e9ff; }
+    .sheet{ background:#0b1022; border-color:#1b2350; }
+    .sheet-head{ background:#0f173d; color:#e6e9ff; }
+    .box{ background:#0b1022; border-color:#243167; color:#e6e9ff; }
+    .label{ color:#b8c1ff; }
+  }
 </style>
-
-<script>
-  /* ===================== CONFIG ===================== */
-  const API_URL = "https://script.google.com/macros/s/AKfycbz-XTIxbsLFxhPuJN9L-i8Y9thOwF6UrmB2ewll2YEhrcT7rlUsQycaBbdZxDcgNFZ-WA/exec";
-  const ESCUDO_HEADER = "https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png";
-  const WATERMARK_URL = "https://drive.google.com/uc?export=view&id=1k4OrJhFAHMbi7I3Um853TME_BcrTNu-4";
-
-  /* ===================== HELPERS ===================== */
-  const p2=n=>String(n).padStart(2,"0");
-  function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`; }
-
-  async function postJSONCompat(payload){
-    try{ const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)}); return await r.json(); }
-    catch{}
-    const body="payload="+encodeURIComponent(JSON.stringify(payload));
-    const r2=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body});
-    return await r2.json();
-  }
-  async function getStats(fecha){ const r=await fetch(`${API_URL}?action=stats&fecha=${encodeURIComponent(fecha)}`); return await r.json(); }
-
-  function renderStatsBox(stats){
-    const box=document.getElementById("stats");
-    if(!stats.ok){ box.innerHTML=`<div class="text-red-600 text-sm">${stats.error||"No se pudo obtener disponibilidad"}</div>`; return; }
-    const s=stats.stats, fmt=id=>id==="08:00-10:00"?"08:00 – 10:00":"10:30 – 12:00";
-    const rows=s.slots.map(x=>`
-      <div class="flex items-center justify-between rounded-lg border px-3 py-2">
-        <div>
-          <div class="font-semibold text-slate-800">${fmt(x.slotId)}</div>
-          <div class="text-xs text-slate-500">Usados: ${x.used} / ${x.capacity}</div>
-        </div>
-        <div class="text-sm font-semibold ${x.remaining? 'text-emerald-700':'text-red-700'}">${x.remaining} disp.</div>
-      </div>`).join("");
-    box.innerHTML=`
-      <div class="text-sm text-slate-700">Fecha: <strong>${s.fecha}</strong></div>
-      <div class="mt-3 space-y-2">${rows}</div>
-      <div class="mt-3 rounded-lg px-3 py-2 text-sm font-semibold ${s.remainingDay===0?"bg-red-50 text-red-700":"bg-emerald-50 text-emerald-700"}">
-        Total del día: ${s.usadosDia} / ${s.totalDia} (restan ${s.remainingDay})
-      </div>`;
-  }
-
-  document.addEventListener("DOMContentLoaded", ()=>{
-    const form  = document.getElementById("turno-form");
-    const fecha = document.querySelector('input[name="fecha"]');
-    const email = document.querySelector('input[name="email"]');
-    const msg   = document.getElementById("msg");
-    const btn   = document.getElementById("submitBtn");
-    const printBar = document.getElementById("printBtnBar");
-    const receiptCard = document.getElementById("receiptCard");
-    const receiptDiv  = document.getElementById("receipt");
-
-    // Estado inicial: ocultar comprobante y botón imprimir
-    receiptCard.classList.add("hidden");
-    printBar.classList.add("hidden");
-
-    fecha.value = todayISO();
-    fecha.min   = todayISO();
-
-    const refreshStats = async () => {
-      document.getElementById("stats").textContent = "Cargando...";
-      try { renderStatsBox(await getStats(fecha.value)); }
-      catch(e){ document.getElementById("stats").textContent = e.message || "Error al consultar"; }
-    };
-    refreshStats();
-    fecha.addEventListener("change", refreshStats);
-
-    form.addEventListener("submit", async (ev)=>{
-      ev.preventDefault();
-      msg.textContent = "";
-      msg.className   = "text-sm text-green-700";
-
-      // Al enviar, ocultar por si estaba visible de un registro previo
-      receiptCard.classList.add("hidden");
-      printBar.classList.add("hidden");
-      receiptDiv.innerHTML = "";
-
-      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())){
-        msg.textContent = "Ingresa un correo válido.";
-        msg.className   = "text-sm text-red-600";
-        email.focus(); return;
-      }
-
-      const fd = new FormData(form);
-      const payload = Object.fromEntries(fd.entries());
-      payload.placa = (payload.placa||"").toUpperCase();
-      payload.email = (payload.email||"").trim().toLowerCase();
-
-      try{
-        btn.disabled = true; btn.textContent = "Enviando…";
-        const resp = await postJSONCompat(payload);
-        if(!resp.ok) throw new Error(resp.error || "No se pudo registrar");
-
-        const r = resp.turno;
-        const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
-
-        /* ======= HOJA (estilo input-lectura) ======= */
-        const receipt = document.getElementById("receipt");
-        receipt.style.setProperty("--wm-url", `url("${WATERMARK_URL}")`);
-        receipt.innerHTML = `
-          <div class="sheet watermark">
-            <div class="sheet-head">
-              <h1>COMPROBANTE DE TURNO</h1>
-              <div class="sub">Confirmación enviada a <b>${r.email}</b>. Presente este comprobante el día de su pericia.</div>
-            </div>
-
-            <div class="sheet-body wm-content">
-              <div class="display-grid">
-                <!-- Columna izquierda -->
-                <div class="space-y-4">
-                  <div class="group">
-                    <div class="label">Correo</div>
-                    <div class="box">${r.email}</div>
-                  </div>
-                  <div class="group">
-                    <div class="label">Fecha</div>
-                    <div class="box">${r.fecha}</div>
-                  </div>
-                  <div class="group">
-                    <div class="label">Oficio</div>
-                    <div class="box">${r.oficio}</div>
-                  </div>
-                  <div class="group">
-                    <div class="label">Fiscal solicitante</div>
-                    <div class="box">${r.fiscal}</div>
-                  </div>
-                  <div class="group">
-                    <div class="label">Placa</div>
-                    <div class="box">${r.placa}</div>
-                  </div>
-                </div>
-
-                <!-- Columna derecha -->
-                <div class="space-y-4">
-                  <div class="group">
-                    <div class="label">ID turno</div>
-                    <div class="box">${r.id_turno}</div>
-                  </div>
-                  <div class="group">
-                    <div class="label">Horario</div>
-                    <div class="box">${slot}</div>
-                  </div>
-                  <div class="group">
-                    <div class="label">N° Inv./Instr. Fiscal</div>
-                    <div class="box">${r.numeroInvestigacion}</div>
-                  </div>
-                  <div class="group">
-                    <div class="label">Propietario</div>
-                    <div class="box">${r.propietario}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="escudo">
-                <img src="${ESCUDO_HEADER}" alt="Escudo">
-              </div>
-            </div>
-          </div>
-        `;
-
-        // Mostrar comprobante y habilitar botón imprimir
-        receiptCard.classList.remove("hidden");
-        printBar.classList.remove("hidden");
-
-        msg.textContent = "Turno registrado y confirmado por email.";
-
-        const fechaReservada = r.fecha;
-        form.reset();
-        fecha.value = fechaReservada;
-        document.getElementById("stats").textContent = "Cargando...";
-        renderStatsBox(await getStats(fecha.value));
-
-      }catch(e){
-        msg.textContent = e.message;
-        msg.className   = "text-sm text-red-600";
-      }finally{
-        btn.disabled = false; btn.textContent = "REGISTRAR TURNO";
-      }
-    });
-  });
-</script>
 </head>
 <body>
 
-  <!-- ====== HEADER SOLO HASTA LA COLUMNA IZQUIERDA (centrado) ====== -->
-  <header class="no-print">
-    <div class="max-w-6xl mx-auto px-4 pt-4">
+<!-- ===== TOASTS (1) ===== -->
+<div id="toastRoot" class="fixed top-4 right-4 z-40 space-y-2 no-print"></div>
+
+<!-- ===== HEADER STICKY Y RECORTADO (4) ===== -->
+<header class="no-print sticky top-0 z-20">
+  <div class="bg-[#1b2253] text-white">
+    <div class="max-w-6xl mx-auto px-4 pt-4 pb-2">
       <div class="grid md:grid-cols-3 gap-6">
-        <!-- Marco azul recortado (2/3) -->
+        <!-- Marco azul solo hasta la columna izquierda -->
         <div class="md:col-span-2">
-          <div class="bg-[#1b2253] text-white rounded-2xl px-6 md:px-8 py-4 md:py-5 shadow">
+          <div id="headerCard" class="bg-[#1b2253] text-white rounded-2xl px-6 md:px-8 py-4 md:py-5 transition-shadow">
             <div class="flex items-center justify-center gap-3 md:gap-4">
               <img
                 src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png"
@@ -273,71 +127,326 @@
             </div>
           </div>
         </div>
-        <!-- Columna derecha vacía -->
         <div class="hidden md:block"></div>
       </div>
     </div>
-  </header>
+  </div>
+</header>
 
-  <!-- ====== FORM + STATS (no imprimen) ====== -->
-  <main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-3 gap-6 no-print">
-    <section class="bg-white border rounded-xl p-6 md:col-span-2">
-      <h2 class="text-xl font-semibold mb-4" style="color:#1b2253">Registrar turno</h2>
-      <form id="turno-form" class="grid grid-cols-1 gap-4">
-        <label class="text-sm field-label">Oficio<span class="text-red-500">*</span>
-          <input name="oficio" class="mt-1 w-full rounded-lg border px-3 py-2" required>
-        </label>
-        <label class="text-sm field-label">N° Investigación Previa / Instrucción Fiscal<span class="text-red-500">*</span>
-          <input name="numeroInvestigacion" class="mt-1 w-full rounded-lg border px-3 py-2" required>
-        </label>
-        <label class="text-sm field-label">Fiscal solicitante<span class="text-red-500">*</span>
-          <input name="fiscal" class="mt-1 w-full rounded-lg border px-3 py-2" required>
-        </label>
-        <label class="text-sm field-label">Propietario del vehículo<span class="text-red-500">*</span>
-          <input name="propietario" class="mt-1 w-full rounded-lg border px-3 py-2" required>
-        </label>
-        <label class="text-sm field-label">Placa<span class="text-red-500">*</span>
-          <input name="placa" class="mt-1 w-full rounded-lg border px-3 py-2 uppercase" placeholder="ABC-123" required>
-        </label>
-        <label class="text-sm field-label">Correo electrónico (para confirmar)<span class="text-red-500">*</span>
-          <input name="email" type="email" class="mt-1 w-full rounded-lg border px-3 py-2" placeholder="tucorreo@ejemplo.com" required>
-        </label>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <label class="text-sm field-label">Fecha<span class="text-red-500">*</span>
-            <input type="date" name="fecha" class="mt-1 w-full rounded-lg border px-3 py-2" required>
-          </label>
-          <label class="text-sm field-label">Franja horaria<span class="text-red-500">*</span>
-            <select name="slotId" class="mt-1 w-full rounded-lg border px-3 py-2" required>
-              <option value="08:00-10:00">08:00 – 10:00</option>
-              <option value="10:30-12:00">10:30 – 12:00</option>
-            </select>
-          </label>
-        </div>
-        <button id="submitBtn" class="primary w-full py-3 mt-2 text-sm font-semibold shadow">REGISTRAR TURNO</button>
-        <div id="msg" class="text-sm"></div>
-      </form>
-    </section>
+<!-- ===== FORM + STATS ===== -->
+<main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-3 gap-6 no-print">
+  <section class="bg-white/95 backdrop-blur border border-slate-200 shadow-sm rounded-xl p-6 md:col-span-2">
+    <h2 class="text-xl font-semibold mb-4" style="color:#1b2253">Registrar turno</h2>
+    <form id="turno-form" class="grid grid-cols-1 gap-4">
+      <label class="text-sm field-label">Oficio<span class="text-red-500">*</span>
+        <input name="oficio" class="mt-1 w-full rounded-lg border px-3 py-2" required>
+      </label>
 
-    <aside class="bg-white border rounded-xl p-6">
-      <h3 class="text-lg font-semibold mb-2" style="color:#1b2253">Disponibilidad del día</h3>
-      <div id="stats" class="text-sm">Cargando…</div>
-    </aside>
-  </main>
+      <label class="text-sm field-label">N° Investigación Previa / Instrucción Fiscal<span class="text-red-500">*</span>
+        <input name="numeroInvestigacion" class="mt-1 w-full rounded-lg border px-3 py-2" required>
+      </label>
 
-  <!-- ====== SOLO COMPROBANTE (oculto hasta registrar) ====== -->
-  <section id="receiptCard" class="px-4 pb-6 hidden">
-    <div id="printable">
-      <div id="receipt"></div>
-    </div>
+      <label class="text-sm field-label">Fiscal solicitante<span class="text-red-500">*</span>
+        <input name="fiscal" class="mt-1 w-full rounded-lg border px-3 py-2" required>
+      </label>
+
+      <label class="text-sm field-label">Propietario del vehículo<span class="text-red-500">*</span>
+        <input name="propietario" class="mt-1 w-full rounded-lg border px-3 py-2" required>
+      </label>
+
+      <!-- (2) Placa con validación en vivo -->
+      <label class="text-sm field-label">Placa<span class="text-red-500">*</span>
+        <input id="inpPlaca" name="placa" class="mt-1 w-full rounded-lg border px-3 py-2 uppercase"
+               placeholder="ABC-123 o ABC-1234" required>
+        <p id="errPlaca" class="help-error">Formato de placa inválido.</p>
+      </label>
+
+      <!-- (2) Email con validación en vivo -->
+      <label class="text-sm field-label">Correo electrónico (para confirmar)<span class="text-red-500">*</span>
+        <input id="inpEmail" name="email" type="email" class="mt-1 w-full rounded-lg border px-3 py-2"
+               placeholder="tucorreo@ejemplo.com" required>
+        <p id="errEmail" class="help-error">Correo inválido.</p>
+      </label>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="text-sm field-label">Fecha<span class="text-red-500">*</span>
+          <input type="date" name="fecha" class="mt-1 w-full rounded-lg border px-3 py-2" required>
+        </label>
+        <label class="text-sm field-label">Franja horaria<span class="text-red-500">*</span>
+          <select name="slotId" class="mt-1 w-full rounded-lg border px-3 py-2" required>
+            <option value="08:00-10:00">08:00 – 10:00</option>
+            <option value="10:30-12:00">10:30 – 12:00</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- (1) Botón con spinner -->
+      <button id="submitBtn"
+        class="primary w-full py-3 mt-2 text-sm font-semibold shadow disabled:opacity-70 disabled:pointer-events-none">
+        <span class="inline-flex items-center gap-2">
+          <svg id="btnSpinner" class="hidden animate-spin h-4 w-4" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+          </svg>
+          <span>REGISTRAR TURNO</span>
+        </span>
+      </button>
+
+      <div id="msg" class="text-sm" aria-live="polite"></div>
+    </form>
   </section>
 
-  <!-- Botón imprimir: oculto hasta que haya comprobante -->
-  <div id="printBtnBar" class="fixed bottom-3 left-0 right-0 flex justify-center gap-3 no-print hidden">
-    <button class="primary px-5 py-2 text-sm font-semibold shadow" onclick="window.print()">IMPRIMIR COMPROBANTE</button>
-  </div>
+  <aside class="bg-white/95 backdrop-blur border border-slate-200 shadow-sm rounded-xl p-6">
+    <h3 class="text-lg font-semibold mb-2" style="color:#1b2253">Disponibilidad del día</h3>
+    <div id="stats" class="text-sm">Cargando…</div>
+  </aside>
+</main>
 
-  <footer class="max-w-6xl mx-auto px-4 pb-10 pt-4 text-center text-xs text-slate-600 no-print">
-    Sistema de turnos • Uso institucional
-  </footer>
+<!-- ===== COMPROBANTE (se muestra tras registrar) ===== -->
+<section id="receiptCard" class="px-4 pb-6 hidden">
+  <div id="printable">
+    <div id="receipt"></div>
+  </div>
+</section>
+
+<!-- Botón imprimir: oculto hasta que haya comprobante -->
+<div id="printBtnBar" class="fixed bottom-3 left-0 right-0 flex justify-center gap-3 no-print hidden">
+  <button class="primary px-5 py-2 text-sm font-semibold shadow" onclick="window.print()">IMPRIMIR COMPROBANTE</button>
+</div>
+
+<footer class="max-w-6xl mx-auto px-4 pb-10 pt-4 text-center text-xs text-slate-600 no-print">
+  Sistema de turnos • Uso institucional
+</footer>
+
+<script>
+  /* ===================== CONFIG ===================== */
+  const API_URL = "https://script.google.com/macros/s/AKfycbz-XTIxbsLFxhPuJN9L-i8Y9thOwF6UrmB2ewll2YEhrcT7rlUsQycaBbdZxDcgNFZ-WA/exec";
+  const ESCUDO_HEADER = "https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png";
+  const WATERMARK_URL = "https://drive.google.com/uc?export=view&id=1k4OrJhFAHMbi7I3Um853TME_BcrTNu-4";
+  const SHOW_QR = false; // (7) cambia a true si deseas mostrar QR en el comprobante
+
+  /* ===================== HELPERS ===================== */
+  const p2=n=>String(n).padStart(2,"0");
+  function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`; }
+
+  async function postJSONCompat(payload){
+    try{ const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)}); return await r.json(); }
+    catch{}
+    const body="payload="+encodeURIComponent(JSON.stringify(payload));
+    const r2=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body});
+    return await r2.json();
+  }
+  async function getStats(fecha){ const r=await fetch(`${API_URL}?action=stats&fecha=${encodeURIComponent(fecha)}`); return await r.json(); }
+
+  // ===== TOASTS (1) =====
+  function showToast(msg, type="success", ms=3500){
+    const root = document.getElementById("toastRoot");
+    const box = document.createElement("div");
+    const colors = type==="success" ? "bg-emerald-600" : type==="error" ? "bg-red-600" : "bg-slate-800";
+    box.className = `${colors} text-white rounded-lg shadow px-4 py-2 text-sm transition transform duration-300 translate-y-[-8px] opacity-0`;
+    box.textContent = msg;
+    root.appendChild(box);
+    requestAnimationFrame(()=>{ box.style.opacity=1; box.style.transform="translateY(0)"; });
+    setTimeout(()=>{
+      box.style.opacity=0; box.style.transform="translateY(-8px)";
+      setTimeout(()=>box.remove(),300);
+    }, ms);
+  }
+
+  // Spinner en botón enviar (1)
+  function setSubmitting(isOn){
+    const btn = document.getElementById("submitBtn");
+    const spin = document.getElementById("btnSpinner");
+    btn.disabled = isOn;
+    if (spin) spin.classList.toggle("hidden", !isOn);
+  }
+
+  // (3) Disponibilidad con chips y barra
+  function renderStatsBox(stats){
+    const box=document.getElementById("stats");
+    if(!stats.ok){ box.innerHTML=`<div class="text-red-600 text-sm">${stats.error||"No se pudo obtener disponibilidad"}</div>`; return; }
+    const s=stats.stats;
+    const fmt=id=>id==="08:00-10:00"?"08:00 – 10:00":"10:30 – 12:00";
+
+    const rows=s.slots.map(x=>{
+      const chip = x.remaining ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700";
+      return `
+        <div class="flex items-center justify-between rounded-lg border px-3 py-2">
+          <div>
+            <div class="font-medium text-slate-800">${fmt(x.slotId)}</div>
+            <div class="text-[11px] text-slate-500">Usados: ${x.used} / ${x.capacity}</div>
+          </div>
+          <span class="text-[11px] px-2 py-1 rounded-full ${chip}">
+            ${x.remaining} disp.
+          </span>
+        </div>`;
+    }).join("");
+
+    const pct = s.totalDia ? Math.round(100*s.usadosDia/s.totalDia) : 0;
+    const barColor = s.remainingDay ? "bg-emerald-500" : "bg-red-500";
+
+    box.innerHTML=`
+      <div class="text-sm text-slate-700">Fecha: <strong>${s.fecha}</strong></div>
+      <div class="mt-3 space-y-2">${rows}</div>
+      <div class="mt-3 text-xs text-slate-600">Ocupación total del día: ${s.usadosDia} / ${s.totalDia} (${pct}%)</div>
+      <div class="mt-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+        <div class="${barColor} h-2" style="width:${pct}%;"></div>
+      </div>
+      <div class="mt-2 rounded-lg px-3 py-2 text-sm font-semibold ${s.remainingDay===0?"bg-red-50 text-red-700":"bg-emerald-50 text-emerald-700"}">
+        Total del día: ${s.usadosDia} / ${s.totalDia} (restan ${s.remainingDay})
+      </div>`;
+  }
+
+  // (4) Sombra del header al hacer scroll
+  window.addEventListener("scroll", ()=>{
+    const card = document.getElementById("headerCard");
+    card.classList.toggle("shadow-md", (window.scrollY||0) > 8);
+  }, {passive:true});
+
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const form  = document.getElementById("turno-form");
+    const fecha = document.querySelector('input[name="fecha"]');
+    const email = document.getElementById("inpEmail");
+    const placa = document.getElementById("inpPlaca");
+    const msg   = document.getElementById("msg");
+    const printBar = document.getElementById("printBtnBar");
+    const receiptCard = document.getElementById("receiptCard");
+    const receiptDiv  = document.getElementById("receipt");
+
+    // Estado inicial
+    receiptCard.classList.add("hidden");
+    printBar.classList.add("hidden");
+
+    const p2=n=>String(n).padStart(2,"0");
+    const today = new Date();
+    const todayISO = `${today.getFullYear()}-${p2(today.getMonth()+1)}-${p2(today.getDate())}`;
+    fecha.value = todayISO;
+    fecha.min   = todayISO;
+
+    const refreshStats = async () => {
+      document.getElementById("stats").textContent = "Cargando...";
+      try { renderStatsBox(await getStats(fecha.value)); }
+      catch(e){ document.getElementById("stats").textContent = e.message || "Error al consultar"; }
+    };
+    refreshStats();
+    fecha.addEventListener("change", refreshStats);
+
+    // (2) Validación en vivo
+    const rePlaca = /^[A-Za-z]{3}-?\d{3,4}$/;
+    const reEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const errPlaca = document.getElementById("errPlaca");
+    const errEmail = document.getElementById("errEmail");
+
+    function valLive(el, errEl, testFn){
+      const ok = testFn(el.value.trim());
+      el.classList.toggle("input-error", !ok);
+      errEl.classList.toggle("show", !ok);
+      return ok;
+    }
+    const vPlaca = ()=> valLive(placa, errPlaca, v=>rePlaca.test(v));
+    const vEmail = ()=> valLive(email, errEmail, v=>reEmail.test(v));
+    placa.addEventListener("input", vPlaca);
+    email.addEventListener("input", vEmail);
+
+    form.addEventListener("submit", async (ev)=>{
+      ev.preventDefault();
+      msg.textContent = "";
+      msg.className   = "text-sm text-green-700";
+
+      // Ocultar comprobante/botón si hubiera uno previo
+      receiptCard.classList.add("hidden");
+      printBar.classList.add("hidden");
+      receiptDiv.innerHTML = "";
+
+      if(!vPlaca() | !vEmail()){
+        showToast("Revisa los campos marcados.","error");
+        return;
+      }
+
+      const fd = new FormData(form);
+      const payload = Object.fromEntries(fd.entries());
+      payload.placa = (payload.placa||"").toUpperCase();
+      payload.email = (payload.email||"").trim().toLowerCase();
+
+      try{
+        setSubmitting(true);
+        const resp = await postJSONCompat(payload);
+        if(!resp.ok) throw new Error(resp.error || "No se pudo registrar");
+
+        const r = resp.turno;
+        const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
+
+        // ===== COMPROBANTE =====
+        const verifyUrl = location.href.split("#")[0] + "?id=" + encodeURIComponent(r.id_turno);
+        const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=110x110&chl=${encodeURIComponent(verifyUrl)}`;
+
+        receiptDiv.style.setProperty("--wm-url", `url("${WATERMARK_URL}")`);
+        receiptDiv.innerHTML = `
+          <div class="sheet watermark">
+            <div class="sheet-head">
+              <h1>COMPROBANTE DE TURNO</h1>
+              <div class="sub">Confirmación enviada a <b>${r.email}</b>. Presente este comprobante el día de su pericia.</div>
+            </div>
+
+            <div class="sheet-body wm-content">
+              <div class="display-grid">
+                <div class="space-y-4">
+                  <div class="group"><div class="label">Correo</div><div class="box">${r.email}</div></div>
+                  <div class="group"><div class="label">Fecha</div><div class="box">${r.fecha}</div></div>
+                  <div class="group"><div class="label">Oficio</div><div class="box">${r.oficio}</div></div>
+                  <div class="group"><div class="label">Fiscal solicitante</div><div class="box">${r.fiscal}</div></div>
+                  <div class="group"><div class="label">Placa</div><div class="box">${r.placa}</div></div>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="group"><div class="label">ID turno</div><div class="box">${r.id_turno}</div></div>
+                  <div class="group"><div class="label">Horario</div><div class="box">${slot}</div></div>
+                  <div class="group"><div class="label">N° Inv./Instr. Fiscal</div><div class="box">${r.numeroInvestigacion}</div></div>
+                  <div class="group"><div class="label">Propietario</div><div class="box">${r.propietario}</div></div>
+                </div>
+              </div>
+
+              ${SHOW_QR ? `
+              <div class="mt-6 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <img src="${qrUrl}" alt="QR" class="h-[28mm] w-[28mm] border rounded-md p-1 bg-white"/>
+                  <div class="text-[11px] text-slate-600">
+                    Escanee para verificar el turno<br><span class="text-slate-800 font-medium">ID: ${r.id_turno}</span>
+                  </div>
+                </div>
+                <div class="escudo"><img src="${ESCUDO_HEADER}" alt="Escudo"></div>
+              </div>
+              ` : `
+              <div class="escudo"><img src="${ESCUDO_HEADER}" alt="Escudo"></div>
+              `}
+              <div class="mt-6 text-[11px] text-slate-500 border-t pt-3">
+                Dirección de Criminalística • Análisis de Numeraciones y Marcas Seriales
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Mostrar comprobante y habilitar imprimir
+        document.getElementById("receiptCard").classList.remove("hidden");
+        document.getElementById("printBtnBar").classList.remove("hidden");
+
+        showToast("Turno registrado y confirmado por email.","success");
+
+        const fechaReservada = r.fecha;
+        form.reset();
+        fecha.value = fechaReservada;
+        document.getElementById("stats").textContent = "Cargando...";
+        renderStatsBox(await getStats(fecha.value));
+
+      }catch(e){
+        showToast(e.message || "Error al registrar","error");
+        msg.textContent = e.message || "Error al registrar";
+        msg.className   = "text-sm text-red-600";
+      }finally{
+        setSubmitting(false);
+      }
+    });
+  });
+</script>
 </body>
 </html>
