@@ -6,7 +6,7 @@
 <title>Análisis de Numeraciones y Marcas Seriales</title>
 <script src="https://cdn.tailwindcss.com"></script>
 
-<!-- Favicon + Theme (10) -->
+<!-- Favicon + Theme -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='10' fill='%231b2253'/%3E%3Ctext x='50%25' y='58%25' font-size='36' text-anchor='middle' fill='white' font-family='Arial,Helvetica,sans-serif'%3EAN%3C/text%3E%3C/svg%3E">
 <meta name="theme-color" content="#1b2253">
 
@@ -18,62 +18,61 @@
   body{ background:#f5f7fb; }
 
   /* ===================== HOJA A4 (1 página) ===================== */
-  @page{ size:A4; margin:10mm; } /* En el diálogo de impresión, desmarcar encabezados y pies */
+  .sheet{
+    width:180mm;              /* ajustado para verse como la captura */
+    margin:0 auto;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .sheet-head{
+    background:#1b2253;       /* navy sólido */
+    color:#fff;
+    text-align:center;
+    padding:10mm 8mm 6mm;
+  }
+  .sheet-head h1{ margin:0; font-size:18pt; font-weight:800; letter-spacing:.02em; }
+  .sheet-head .sub{ margin-top:2mm; font-size:9.5pt; color:#dbe3ff; }
+  .sheet-body{ position:relative; padding:10mm 8mm 6mm; }
 
-  .sheet{ width:190mm; margin:0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
-  .sheet-head{ background:var(--navy); color:#fff; text-align:center; padding:8mm 8mm 6mm; }
-  .sheet-head h1{ margin:0; font-size:15pt; font-weight:800; letter-spacing:.02em; }
-  .sheet-head .sub{ margin-top:2mm; font-size:9pt; color:#dbe3ff; }
-  .sheet-body{ position:relative; padding:8mm; }
+  /* Dos columnas */
+  .display-grid{ display:grid; grid-template-columns:1fr 1fr; column-gap:8mm; row-gap:10mm; }
 
-  /* Marca de agua en la hoja */
+  .label{ font-size:10pt; color:#0f172a; margin-bottom:3mm; display:inline-flex; align-items:center; gap:2mm; }
+  .box{
+    background:#fff; border:1px solid #cfe0ff; border-radius:10px;
+    padding:4mm 5mm; min-height:14mm;
+    font-weight:600; color:#0f172a; font-size:10.5pt; line-height:1.25; word-break:break-word;
+    box-shadow: 0 0 0 2px rgba(59,130,246,.08);
+  }
+
+  .escudo{ margin-top:10mm; display:flex; justify-content:center; }
+  .escudo img{ height:26mm; width:auto; }
+
+  .sheet-body .footer-note{
+    margin-top:12mm; padding-top:4mm; border-top:1px solid #e5e7eb;
+    font-size:10pt; color:#6b7280; text-align:left;
+  }
+
+  /* Marca de agua */
   .watermark{ position:relative; }
   .watermark::after{
     content:""; position:absolute; inset:0;
-    background:center/120mm no-repeat; opacity:.08; z-index:1; pointer-events:none;
+    background:center/120mm no-repeat; opacity:.07; z-index:1; pointer-events:none;
     background-image: var(--wm-url); transform:rotate(-10deg);
   }
   .wm-content{ position:relative; z-index:2; }
 
-  /* Estilo “inputs de lectura” del comprobante */
-  .display-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6mm; }
-  .group{ break-inside:avoid; }
-  .label{ font-size:9pt; color:#0f172a; margin-bottom:2mm; display:inline-flex; align-items:center; gap:2mm; }
-  .box{
-    background:#fff; border:1px solid #dbeafe;
-    border-radius:10px; padding:3mm 4mm; font-weight:600; color:#0f172a;
-    box-shadow: 0 0 0 2px rgba(59,130,246,.08);
-    font-size:10pt; line-height:1.25; word-break:break-word;
-  }
-  .escudo{ margin-top:8mm; display:flex; justify-content:center; }
-  .escudo img{ height:22mm; width:auto; }
-
-  /* Centrar el comprobante en pantalla e impresión */
+  /* Centrado del comprobante en pantalla/print */
   #printable{ display:flex; justify-content:center; }
 
-  /* Foco accesible (2) */
+  /* Foco accesible + errores (form) */
   input, select { outline:none; }
-  input:focus, select:focus {
-    box-shadow: 0 0 0 3px rgba(59,130,246,.18);
-    border-color: #60a5fa !important;
-  }
+  input:focus, select:focus { box-shadow: 0 0 0 3px rgba(59,130,246,.18); border-color: #60a5fa !important; }
   .input-error { border-color:#ef4444 !important; box-shadow:0 0 0 3px rgba(239,68,68,.15) !important; }
   .help-error { font-size:12px; color:#dc2626; margin-top:4px; display:none; }
   .help-error.show { display:block; }
-
-  @media print{
-    body *{ visibility:hidden; }
-    #printable, #printable *{ visibility:visible; }
-    #printable{ position:absolute; inset:0; margin:0; display:flex; justify-content:center; }
-    .sheet, .sheet *{ page-break-inside:avoid; break-inside:avoid; }
-    .no-print{ display:none !important; }
-    .watermark::after{ opacity:.06; background-size:560px; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-
-    /* (9) Impresión refinada */
-    body{ font-family: "Times New Roman", Georgia, serif; }
-    .sheet-head{ background:#fff; color:#111; border-bottom:1px solid #999; }
-    .box{ border-color:#999; box-shadow:none; }
-  }
 
   /* Botones / inputs */
   .primary{ background:var(--navy); color:#fff; border-radius:12px; transition:.2s }
@@ -81,7 +80,26 @@
   input,select{ border-color:#d6dafe !important }
   .field-label{ color:#2a2f61 }
 
-  /* (6) Modo oscuro automático */
+  /* Encabezado sticky */
+  @media (min-width: 768px){
+    /* nada extra */
+  }
+
+  /* Impresión */
+  @page{ size:A4; margin:10mm; }
+  @media print{
+    html, body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; background:#fff; }
+    body *{ visibility:hidden; }
+    #printable, #printable *{ visibility:visible; }
+    #printable{ position:absolute; inset:0; margin:0; display:flex; justify-content:center; }
+    .sheet, .sheet *{ page-break-inside:avoid; break-inside:avoid; }
+    .no-print{ display:none !important; }
+
+    .box{ border-color:#b8c2d9; box-shadow:none; }
+    .sheet-head{ background:#1b2253; color:#fff; border-bottom:none; }
+  }
+
+  /* (6) Modo oscuro */
   @media (prefers-color-scheme: dark){
     body{ background:#0f1528; }
     .primary{ background:#0f173d; color:#e6e9ff; }
@@ -94,10 +112,10 @@
 </head>
 <body>
 
-<!-- ===== TOASTS (1) ===== -->
+<!-- TOASTS -->
 <div id="toastRoot" class="fixed top-4 right-4 z-40 space-y-2 no-print"></div>
 
-<!-- ===== HEADER STICKY Y RECORTADO (4) ===== -->
+<!-- HEADER STICKY RECORTADO -->
 <header class="no-print sticky top-0 z-20">
   <div class="bg-[#1b2253] text-white">
     <div class="max-w-6xl mx-auto px-4 pt-4 pb-2">
@@ -108,16 +126,11 @@
             <div class="flex items-center justify-center gap-3 md:gap-4">
               <img
                 src="https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png"
-                alt="Escudo"
-                class="h-16 sm:h-20 md:h-24 lg:h-28 w-auto object-contain"
+                alt="Escudo" class="h-16 sm:h-20 md:h-24 lg:h-28 w-auto object-contain"
               />
               <div class="text-center leading-snug">
-                <div class="font-extrabold tracking-wide text-sm sm:text-lg md:text-xl">
-                  ANÁLISIS DE NUMERACIONES
-                </div>
-                <div class="font-extrabold tracking-wide text-sm sm:text-lg md:text-xl">
-                  Y MARCAS SERIALES
-                </div>
+                <div class="font-extrabold tracking-wide text-sm sm:text-lg md:text-xl">ANÁLISIS DE NUMERACIONES</div>
+                <div class="font-extrabold tracking-wide text-sm sm:text-lg md:text-xl">Y MARCAS SERIALES</div>
                 <div class="mt-2 flex justify-center">
                   <div class="h-[3px] w-16 bg-[#F5C400] rounded-l"></div>
                   <div class="h-[3px] w-28 bg-[#2D63C8]"></div>
@@ -133,7 +146,7 @@
   </div>
 </header>
 
-<!-- ===== FORM + STATS ===== -->
+<!-- FORM + STATS -->
 <main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-3 gap-6 no-print">
   <section class="bg-white/95 backdrop-blur border border-slate-200 shadow-sm rounded-xl p-6 md:col-span-2">
     <h2 class="text-xl font-semibold mb-4" style="color:#1b2253">Registrar turno</h2>
@@ -154,14 +167,20 @@
         <input name="propietario" class="mt-1 w-full rounded-lg border px-3 py-2" required>
       </label>
 
-      <!-- (2) Placa con validación en vivo -->
+      <!-- Placa: autos y motos -->
       <label class="text-sm field-label">Placa<span class="text-red-500">*</span>
-        <input id="inpPlaca" name="placa" class="mt-1 w-full rounded-lg border px-3 py-2 uppercase"
-               placeholder="ABC-123 o ABC-1234" required>
-        <p id="errPlaca" class="help-error">Formato de placa inválido.</p>
+        <input
+          id="inpPlaca"
+          name="placa"
+          class="mt-1 w-full rounded-lg border px-3 py-2 uppercase"
+          placeholder="Autos: ABC-123 / ABC-1234 · Motos: AB123C (o AB-123C)"
+          pattern="(?:[A-Za-z]{3}-?\d{3,4}|[A-Za-z]{2}-?\d{3}[A-Za-z])"
+          title="Autos: ABC-123 o ABC-1234 · Motos: AB123C o AB-123C"
+          required
+        >
+        <p id="errPlaca" class="help-error">Formato de placa inválido (Autos: ABC-123 / ABC-1234 · Motos: AB123C).</p>
       </label>
 
-      <!-- (2) Email con validación en vivo -->
       <label class="text-sm field-label">Correo electrónico (para confirmar)<span class="text-red-500">*</span>
         <input id="inpEmail" name="email" type="email" class="mt-1 w-full rounded-lg border px-3 py-2"
                placeholder="tucorreo@ejemplo.com" required>
@@ -180,7 +199,7 @@
         </label>
       </div>
 
-      <!-- (1) Botón con spinner -->
+      <!-- Botón con spinner -->
       <button id="submitBtn"
         class="primary w-full py-3 mt-2 text-sm font-semibold shadow disabled:opacity-70 disabled:pointer-events-none">
         <span class="inline-flex items-center gap-2">
@@ -202,14 +221,14 @@
   </aside>
 </main>
 
-<!-- ===== COMPROBANTE (se muestra tras registrar) ===== -->
+<!-- COMPROBANTE -->
 <section id="receiptCard" class="px-4 pb-6 hidden">
   <div id="printable">
     <div id="receipt"></div>
   </div>
 </section>
 
-<!-- Botón imprimir: oculto hasta que haya comprobante -->
+<!-- Botón imprimir (solo cuando hay comprobante) -->
 <div id="printBtnBar" class="fixed bottom-3 left-0 right-0 flex justify-center gap-3 no-print hidden">
   <button class="primary px-5 py-2 text-sm font-semibold shadow" onclick="window.print()">IMPRIMIR COMPROBANTE</button>
 </div>
@@ -223,7 +242,7 @@
   const API_URL = "https://script.google.com/macros/s/AKfycbz-XTIxbsLFxhPuJN9L-i8Y9thOwF6UrmB2ewll2YEhrcT7rlUsQycaBbdZxDcgNFZ-WA/exec";
   const ESCUDO_HEADER = "https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png";
   const WATERMARK_URL = "https://drive.google.com/uc?export=view&id=1k4OrJhFAHMbi7I3Um853TME_BcrTNu-4";
-  const SHOW_QR = false; // (7) cambia a true si deseas mostrar QR en el comprobante
+  const SHOW_QR = false; // cambia a true si quieres QR
 
   /* ===================== HELPERS ===================== */
   const p2=n=>String(n).padStart(2,"0");
@@ -238,7 +257,7 @@
   }
   async function getStats(fecha){ const r=await fetch(`${API_URL}?action=stats&fecha=${encodeURIComponent(fecha)}`); return await r.json(); }
 
-  // ===== TOASTS (1) =====
+  // TOASTS
   function showToast(msg, type="success", ms=3500){
     const root = document.getElementById("toastRoot");
     const box = document.createElement("div");
@@ -247,13 +266,10 @@
     box.textContent = msg;
     root.appendChild(box);
     requestAnimationFrame(()=>{ box.style.opacity=1; box.style.transform="translateY(0)"; });
-    setTimeout(()=>{
-      box.style.opacity=0; box.style.transform="translateY(-8px)";
-      setTimeout(()=>box.remove(),300);
-    }, ms);
+    setTimeout(()=>{ box.style.opacity=0; box.style.transform="translateY(-8px)"; setTimeout(()=>box.remove(),300); }, ms);
   }
 
-  // Spinner en botón enviar (1)
+  // Spinner
   function setSubmitting(isOn){
     const btn = document.getElementById("submitBtn");
     const spin = document.getElementById("btnSpinner");
@@ -261,7 +277,7 @@
     if (spin) spin.classList.toggle("hidden", !isOn);
   }
 
-  // (3) Disponibilidad con chips y barra
+  // Disponibilidad
   function renderStatsBox(stats){
     const box=document.getElementById("stats");
     if(!stats.ok){ box.innerHTML=`<div class="text-red-600 text-sm">${stats.error||"No se pudo obtener disponibilidad"}</div>`; return; }
@@ -297,7 +313,7 @@
       </div>`;
   }
 
-  // (4) Sombra del header al hacer scroll
+  // Sombra header
   window.addEventListener("scroll", ()=>{
     const card = document.getElementById("headerCard");
     card.classList.toggle("shadow-md", (window.scrollY||0) > 8);
@@ -317,11 +333,10 @@
     receiptCard.classList.add("hidden");
     printBar.classList.add("hidden");
 
-    const p2=n=>String(n).padStart(2,"0");
-    const today = new Date();
-    const todayISO = `${today.getFullYear()}-${p2(today.getMonth()+1)}-${p2(today.getDate())}`;
-    fecha.value = todayISO;
-    fecha.min   = todayISO;
+    // Fecha mínima = hoy
+    const d = new Date();
+    const tISO = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    fecha.value = tISO; fecha.min = tISO;
 
     const refreshStats = async () => {
       document.getElementById("stats").textContent = "Cargando...";
@@ -331,8 +346,8 @@
     refreshStats();
     fecha.addEventListener("change", refreshStats);
 
-    // (2) Validación en vivo
-    const rePlaca = /^[A-Za-z]{3}-?\d{3,4}$/;
+    // Validación en vivo (autos y motos)
+    const rePlaca = /^(?:[A-Za-z]{3}-?\d{3,4}|[A-Za-z]{2}-?\d{3}[A-Za-z])$/;
     const reEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const errPlaca = document.getElementById("errPlaca");
     const errEmail = document.getElementById("errEmail");
@@ -350,10 +365,8 @@
 
     form.addEventListener("submit", async (ev)=>{
       ev.preventDefault();
-      msg.textContent = "";
-      msg.className   = "text-sm text-green-700";
+      msg.textContent = ""; msg.className = "text-sm text-green-700";
 
-      // Ocultar comprobante/botón si hubiera uno previo
       receiptCard.classList.add("hidden");
       printBar.classList.add("hidden");
       receiptDiv.innerHTML = "";
@@ -410,25 +423,20 @@
               <div class="mt-6 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   <img src="${qrUrl}" alt="QR" class="h-[28mm] w-[28mm] border rounded-md p-1 bg-white"/>
-                  <div class="text-[11px] text-slate-600">
-                    Escanee para verificar el turno<br><span class="text-slate-800 font-medium">ID: ${r.id_turno}</span>
-                  </div>
+                  <div class="text-[11px] text-slate-600">Escanee para verificar el turno<br><span class="text-slate-800 font-medium">ID: ${r.id_turno}</span></div>
                 </div>
                 <div class="escudo"><img src="${ESCUDO_HEADER}" alt="Escudo"></div>
-              </div>
-              ` : `
-              <div class="escudo"><img src="${ESCUDO_HEADER}" alt="Escudo"></div>
-              `}
-              <div class="mt-6 text-[11px] text-slate-500 border-t pt-3">
-                Dirección de Criminalística • Análisis de Numeraciones y Marcas Seriales
-              </div>
+              </div>` : `
+              <div class="escudo"><img src="${ESCUDO_HEADER}" alt="Escudo"></div>`}
+
+              <div class="footer-note">Dirección de Criminalística • Análisis de Numeraciones y Marcas Seriales</div>
             </div>
           </div>
         `;
 
-        // Mostrar comprobante y habilitar imprimir
-        document.getElementById("receiptCard").classList.remove("hidden");
-        document.getElementById("printBtnBar").classList.remove("hidden");
+        // Mostrar comprobante e imprimir
+        receiptCard.classList.remove("hidden");
+        printBar.classList.remove("hidden");
 
         showToast("Turno registrado y confirmado por email.","success");
 
