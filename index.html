@@ -11,18 +11,30 @@
   :root{ --navy:#1b2253; --navy-2:#232b6b; }
   body{ background:#f5f7fb; }
 
+  /* ========= COMPROBANTE ========= */
   .sheet{ width:180mm; margin:0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
-  .sheet-head{ background:#1b2253; color:#fff; text-align:center; padding:10mm 8mm 6mm; }
+  .sheet-head{
+    position:relative;
+    background:#1b2253; color:#fff; text-align:center;
+    padding:10mm 8mm 6mm;        /* top/right/bottom */
+    padding-left:38mm;           /* deja espacio para el escudo a la izquierda */
+  }
   .sheet-head h1{ margin:0; font-size:18pt; font-weight:800; letter-spacing:.02em; }
   .sheet-head .sub{ margin-top:2mm; font-size:9.5pt; color:#dbe3ff; }
+
+  /* escudo EN EL HEADER (arriba-izquierda) */
+  .escudo-head{
+    position:absolute; left:12mm; top:50%; transform:translateY(-50%);
+    height:18mm; width:auto; object-fit:contain;
+  }
+
   .sheet-body{ position:relative; padding:10mm 8mm 6mm; }
   .display-grid{ display:grid; grid-template-columns:1fr 1fr; column-gap:8mm; row-gap:10mm; }
   .label{ font-size:10pt; color:#0f172a; margin-bottom:3mm; display:inline-flex; align-items:center; gap:2mm; }
   .box{ background:#fff; border:1px solid #cfe0ff; border-radius:10px; padding:4mm 5mm; min-height:14mm; font-weight:600; color:#0f172a; font-size:10.5pt; line-height:1.25; word-break:break-word; box-shadow: 0 0 0 2px rgba(59,130,246,.08); }
-  .escudo{ margin-top:10mm; display:flex; justify-content:center; }
-  .escudo img{ height:26mm; width:auto; }
   .sheet-body .footer-note{ margin-top:12mm; padding-top:4mm; border-top:1px solid #e5e7eb; font-size:10pt; color:#6b7280; text-align:left; }
 
+  /* marca de agua */
   .watermark{ position:relative; }
   .watermark::after{ content:""; position:absolute; inset:0; background:center/120mm no-repeat; opacity:.07; z-index:1; pointer-events:none; background-image: var(--wm-url); transform:rotate(-10deg); }
   .wm-content{ position:relative; z-index:2; }
@@ -47,7 +59,6 @@
     #printable{ position:absolute; inset:0; margin:0; display:flex; justify-content:center; }
     .sheet, .sheet *{ page-break-inside:avoid; break-inside:avoid; }
     .no-print{ display:none !important; }
-
     .box{ border-color:#b8c2d9; box-shadow:none; }
     .sheet-head{ background:#1b2253; color:#fff; border-bottom:none; }
   }
@@ -67,7 +78,7 @@
 <!-- TOASTS -->
 <div id="toastRoot" class="fixed top-4 right-4 z-40 space-y-2 no-print"></div>
 
-<!-- HEADER -->
+<!-- HEADER (página) -->
 <header class="no-print sticky top-0 z-20">
   <div class="bg-[#1b2253] text-white">
     <div class="max-w-6xl mx-auto px-4 pt-4 pb-2">
@@ -245,9 +256,7 @@
   }
 
   // Sombra header
-  window.addEventListener("scroll", ()=>{
-    document.getElementById("headerCard").classList.toggle("shadow-md", (window.scrollY||0) > 8);
-  }, {passive:true});
+  window.addEventListener("scroll", ()=>{ document.getElementById("headerCard").classList.toggle("shadow-md", (window.scrollY||0) > 8); }, {passive:true});
 
   document.addEventListener("DOMContentLoaded", ()=>{
     const form  = document.getElementById("turno-form");
@@ -274,11 +283,7 @@
     const reEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const errPlaca = document.getElementById("errPlaca");
     const errEmail = document.getElementById("errEmail");
-
-    function valLive(el, errEl, testFn){
-      const ok=testFn(el.value.trim());
-      el.classList.toggle("input-error", !ok); errEl.classList.toggle("show", !ok); return ok;
-    }
+    function valLive(el, errEl, testFn){ const ok=testFn(el.value.trim()); el.classList.toggle("input-error", !ok); errEl.classList.toggle("show", !ok); return ok; }
     const vPlaca = ()=> valLive(placa, errPlaca, v=>rePlaca.test(v));
     const vEmail = ()=> valLive(email, errEmail, v=>reEmail.test(v));
     placa.addEventListener("input", vPlaca); email.addEventListener("input", vEmail);
@@ -301,12 +306,12 @@
         const r = resp.turno;
         const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
 
-        // Render comprobante
-        const verifyUrl = location.href.split("#")[0] + "?id=" + encodeURIComponent(r.id_turno);
+        // Render comprobante (escudo en el HEADER a la izquierda)
         receiptDiv.style.setProperty("--wm-url", `url("${WATERMARK_URL}")`);
         receiptDiv.innerHTML = `
           <div class="sheet watermark">
             <div class="sheet-head">
+              <img class="escudo-head" src="${ESCUDO_HEADER}" alt="Escudo">
               <h1>COMPROBANTE DE TURNO</h1>
               <div class="sub">Confirmación enviada a <b>${r.email}</b>. Presente este comprobante el día de su pericia.</div>
             </div>
@@ -326,7 +331,6 @@
                   <div class="group"><div class="label">Propietario</div><div class="box">${r.propietario}</div></div>
                 </div>
               </div>
-              <div class="escudo"><img src="${ESCUDO_HEADER}" alt="Escudo"></div>
               <div class="footer-note">Dirección de Criminalística • Análisis de Numeraciones y Marcas Seriales</div>
             </div>
           </div>
