@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin – Turnos</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body{ background:#f7f8fb }
+  .card{ background:#fff; border:1px solid #e5e7eb; border-radius:14px; }
+  .chip{ font-size:11px; padding:.15rem .5rem; border-radius:999px }
+</style>
+</head>
+<body class="min-h-screen">
+  <header class="bg-[#1b2253] text-white">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <h1 class="font-bold tracking-wide">Panel de administración</h1>
+      <button id="logoutBtn" class="text-sm bg-white/10 px-3 py-1 rounded hover:bg-white/20">Salir</button>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <!-- Login si no hay token -->
+    <section id="loginCard" class="card p-6 hidden">
+      <h2 class="font-semibold text-lg mb-2">Autenticación</h2>
+      <p class="text-sm text-slate-600 mb-4">Ingresa el token de administrador.</p>
+      <div class="flex gap-2">
+        <input id="tokenInput" type="password" class="w-full rounded-lg border px-3 py-2" placeholder="ADMIN_TOKEN">
+        <button id="loginBtn" class="bg-[#1b2253] text-white rounded-lg px-4 py-2">Entrar</button>
+      </div>
+      <p id="loginMsg" class="text-sm mt-3"></p>
+    </section>
+
+    <!-- Panel -->
+    <section id="panel" class="hidden space-y-4">
+      <div class="card p-4">
+        <div class="grid md:grid-cols-5 gap-3">
+          <label class="text-sm">Desde
+            <input id="fFrom" type="date" class="mt-1 w-full rounded-lg border px-3 py-2">
+          </label>
+          <label class="text-sm">Hasta
+            <input id="fTo" type="date" class="mt-1 w-full rounded-lg border px-3 py-2">
+          </label>
+          <label class="text-sm">Estado
+            <select id="fEstado" class="mt-1 w-full rounded-lg border px-3 py-2">
+              <option value="">Todos</option>
+              <option value="activo">Activo</option>
+              <option value="anulado">Anulado</option>
+            </select>
+          </label>
+          <label class="text-sm">Buscar
+            <input id="fQ" placeholder="id, placa, fiscal, propietario, email…" class="mt-1 w-full rounded-lg border px-3 py-2">
+          </label>
+          <div class="flex items-end"><button id="buscarBtn" class="bg-[#1b2253] text-white rounded-lg px-4 py-2 w-full">Buscar</button></div>
+        </div>
+      </div>
+
+      <div class="card p-0 overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50">
+            <tr class="text-left">
+              <th class="px-3 py-2">Fecha</th>
+              <th class="px-3 py-2">Horario</th>
+              <th class="px-3 py-2">ID</th>
+              <th class="px-3 py-2">Placa</th>
+              <th class="px-3 py-2">Fiscal</th>
+              <th class="px-3 py-2">Propietario</th>
+              <th class="px-3 py-2">Estado</th>
+              <th class="px-3 py-2"></th>
+            </tr>
+          </thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card p-4 border border-red-200">
+        <h3 class="font-semibold text-red-700 mb-2">Zona peligrosa</h3>
+        <div class="flex gap-2">
+          <input id="purgeConfirm" class="w-full rounded-lg border px-3 py-2" placeholder='Escribe: BORRAR TODO'>
+          <button id="purgeBtn" class="bg-red-600 text-white rounded-lg px-4 py-2">Eliminar todo</button>
+        </div>
+        <p class="text-xs text-red-600 mt-2">Borra todas las filas de la hoja (deja solo cabeceras). Irreversible.</p>
+      </div>
+    </section>
+  </main>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzhetKZv0QKknHmXA6UsEa8TFdRCJu6puT21jK_1EOxAT3NpXQcwN07A4nweJhMZdPiSw/exec";
+const qs = s => document.querySelector(s);
+function adminToken(){ return sessionStorage.getItem('ADMIN_TOKEN') || ''; }
+function setAdminToken(t){ sessionStorage.setItem('ADMIN_TOKEN', t); }
+function clearAdmin(){ sessionStorage.removeItem('ADMIN_TOKEN'); location.reload(); }
+
+const loginCard = qs('#loginCard');
+const panel     = qs('#panel');
+const loginBtn  = qs('#loginBtn');
+const tokenInput= qs('#tokenInput');
+const loginMsg  = qs('#loginMsg');
+const logoutBtn = qs('#logoutBtn');
+logoutBtn.addEventListener('click', clearAdmin);
+
+// Si vienes desde index con token, abre directo
+if (adminToken()){
+  panel.classList.remove('hidden');
+  cargarTabla();
+} else {
+  loginCard.classList.remove('hidden');
+}
+
+loginBtn?.addEventListener('click', async ()=>{
+  const t = tokenInput.value.trim();
+  if (!t) { loginMsg.textContent='Ingresa tu token.'; loginMsg.className='text-sm text-red-600'; return; }
+  const ok = await listTurnos({adminToken:t, limit:1}).then(r=>r.ok).catch(()=>false);
+  if (!ok){ loginMsg.textContent='Token inválido.'; loginMsg.className='text-sm text-red-600'; return; }
+  setAdminToken(t);
+  loginMsg.textContent=''; loginCard.classList.add('hidden'); panel.classList.remove('hidden'); cargarTabla();
+});
+
+// API
+async function listTurnos({from, to, q, estado, adminToken}) {
+  const params = new URLSearchParams({action:'admin.list', adminToken: adminToken || sessionStorage.getItem('ADMIN_TOKEN') || ''});
+  if (from) params.set('from', from);
+  if (to)   params.set('to', to);
+  if (q)    params.set('q', q);
+  if (estado) params.set('estado', estado);
+  const r = await fetch(`${API_URL}?${params}`); return r.json();
+}
+async function adminPost(payload){
+  payload.adminToken = adminToken();
+  const r = await fetch(API_URL, {method:'POST', body: JSON.stringify(payload)}); return r.json();
+}
+
+async function cargarTabla(){
+  const from=qs('#fFrom').value||'', to=qs('#fTo').value||'', q=qs('#fQ').value||'', estado=qs('#fEstado').value||'';
+  const data = await listTurnos({from,to,q,estado});
+  const tb = qs('#tblBody'); tb.innerHTML='';
+  if (!data.ok){ tb.innerHTML = `<tr><td colspan="8" class="px-3 py-3 text-red-600">Error: ${data.error||'No autorizado'}</td></tr>`; return; }
+  if (!data.items.length){ tb.innerHTML = `<tr><td colspan="8" class="px-3 py-3 text-slate-500">Sin resultados</td></tr>`; return; }
+  for (const t of data.items) {
+    const chip = t.estado==='anulado' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="px-3 py-2">${t.fecha||''}</td>
+      <td class="px-3 py-2">${t.slotId||''}</td>
+      <td class="px-3 py-2 font-mono">${t.id_turno||''}</td>
+      <td class="px-3 py-2">${t.placa||''}</td>
+      <td class="px-3 py-2">${t.fiscal||''}</td>
+      <td class="px-3 py-2">${t.propietario||''}</td>
+      <td class="px-3 py-2"><span class="chip ${chip}">${t.estado||''}</span></td>
+      <td class="px-3 py-2">
+        <div class="flex gap-2">
+          <button class="px-2 py-1 rounded bg-amber-500 text-white text-xs" data-act="cancel">Anular</button>
+          <button class="px-2 py-1 rounded bg-red-600 text-white text-xs" data-act="delete">Borrar</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-act="cancel"]').addEventListener('click', async ()=>{
+      const motivo = prompt('Motivo de anulación (opcional):','');
+      if (confirm(`¿Anular turno ${t.id_turno}?`)) {
+        const res = await adminPost({action:'admin.cancel', id_turno:t.id_turno, motivo});
+        alert(res.ok ? 'Anulado' : `Error: ${res.error||'N/A'}`); cargarTabla();
+      }
+    });
+    tr.querySelector('[data-act="delete"]').addEventListener('click', async ()=>{
+      if (!confirm(`Borrar PERMANENTEMENTE el turno ${t.id_turno}?`)) return;
+      if (!confirm('Acción irreversible. ¿Confirmas?')) return;
+      const res = await adminPost({action:'admin.delete', id_turno:t.id_turno});
+      alert(res.ok ? 'Eliminado' : `Error: ${res.error||'N/A'}`); cargarTabla();
+    });
+    tb.appendChild(tr);
+  }
+}
+
+// Purga
+document.getElementById('purgeBtn').addEventListener('click', async ()=>{
+  const txt = document.getElementById('purgeConfirm').value.trim();
+  if (txt !== 'BORRAR TODO') { alert('Escribe exactamente: BORRAR TODO'); return; }
+  if (!confirm('Vas a borrar TODA la hoja de turnos (excepto cabeceras).')) return;
+  if (!confirm('Acción irreversible. ¿Confirmas definitivamente?')) return;
+  const res = await adminPost({action:'admin.purge', confirm: txt});
+  alert(res.ok ? 'Purga completa' : `Error: ${res.error||'N/A'}`); cargarTabla();
+});
+</script>
+</body>
+</html>
