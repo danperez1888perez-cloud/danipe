@@ -20,7 +20,6 @@
   </header>
 
   <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
-    <!-- Login si no hay token -->
     <section id="loginCard" class="card p-6 hidden">
       <h2 class="font-semibold text-lg mb-2">Autenticación</h2>
       <p class="text-sm text-slate-600 mb-4">Ingresa el token de administrador.</p>
@@ -31,7 +30,6 @@
       <p id="loginMsg" class="text-sm mt-3"></p>
     </section>
 
-    <!-- Panel -->
     <section id="panel" class="hidden space-y-4">
       <div class="card p-4">
         <div class="grid md:grid-cols-5 gap-3">
@@ -85,7 +83,7 @@
   </main>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyZM7AY6rNNlV_xE6MBipt6J3b6XnX0f8T7er24J_ee_kMs2c_F1jepmghxBf2Xtcof-w/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzcSlTxGuDSoBnny-YmX2RYwwkuStx1j3_OY4PPa3Xh0W1wta-VWv-g6vo8NPhHA15dqA/exec";
 
 const qs = s => document.querySelector(s);
 function adminToken(){ return sessionStorage.getItem('ADMIN_TOKEN') || ''; }
@@ -100,7 +98,6 @@ const loginMsg  = qs('#loginMsg');
 const logoutBtn = qs('#logoutBtn');
 logoutBtn.addEventListener('click', clearAdmin);
 
-// Si vienes desde index con token, abre directo
 if (adminToken()){
   panel.classList.remove('hidden');
   cargarTabla();
@@ -117,7 +114,6 @@ loginBtn?.addEventListener('click', async ()=>{
   loginMsg.textContent=''; loginCard.classList.add('hidden'); panel.classList.remove('hidden'); cargarTabla();
 });
 
-// API
 async function listTurnos({from, to, q, estado, adminToken}) {
   const params = new URLSearchParams({action:'admin.list', adminToken: adminToken || sessionStorage.getItem('ADMIN_TOKEN') || ''});
   if (from) params.set('from', from);
@@ -171,7 +167,6 @@ async function cargarTabla(){
   }
 }
 
-// Purga
 document.getElementById('purgeBtn').addEventListener('click', async ()=>{
   const txt = document.getElementById('purgeConfirm').value.trim();
   if (txt !== 'BORRAR TODO') { alert('Escribe exactamente: BORRAR TODO'); return; }
