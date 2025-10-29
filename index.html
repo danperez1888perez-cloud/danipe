@@ -10,47 +10,23 @@
 <style>
   :root{ --navy:#1b2253; --navy-2:#232b6b; }
   body{ background:#f5f7fb; }
-
-  /* ========= COMPROBANTE ========= */
   .sheet{ width:180mm; margin:0 auto; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden; }
-  .sheet-head{
-    position:relative;
-    background:#1b2253; color:#fff; text-align:center;
-    padding:10mm 8mm 6mm;        /* top/right/bottom */
-    padding-left:38mm;           /* deja espacio para el escudo a la izquierda */
-  }
+  .sheet-head{ position:relative; background:#1b2253; color:#fff; text-align:center; padding:10mm 8mm 6mm; padding-left:38mm; }
   .sheet-head h1{ margin:0; font-size:18pt; font-weight:800; letter-spacing:.02em; }
   .sheet-head .sub{ margin-top:2mm; font-size:9.5pt; color:#dbe3ff; }
-
-  /* escudo EN EL HEADER (arriba-izquierda) */
-  .escudo-head{
-    position:absolute; left:12mm; top:50%; transform:translateY(-50%);
-    height:18mm; width:auto; object-fit:contain;
-  }
-
+  .escudo-head{ position:absolute; left:12mm; top:50%; transform:translateY(-50%); height:18mm; width:auto; object-fit:contain; }
   .sheet-body{ position:relative; padding:10mm 8mm 6mm; }
   .display-grid{ display:grid; grid-template-columns:1fr 1fr; column-gap:8mm; row-gap:10mm; }
   .label{ font-size:10pt; color:#0f172a; margin-bottom:3mm; display:inline-flex; align-items:center; gap:2mm; }
   .box{ background:#fff; border:1px solid #cfe0ff; border-radius:10px; padding:4mm 5mm; min-height:14mm; font-weight:600; color:#0f172a; font-size:10.5pt; line-height:1.25; word-break:break-word; box-shadow: 0 0 0 2px rgba(59,130,246,.08); }
   .sheet-body .footer-note{ margin-top:12mm; padding-top:4mm; border-top:1px solid #e5e7eb; font-size:10pt; color:#6b7280; text-align:left; }
-
-  /* marca de agua */
-  .watermark{ position:relative; }
-  .watermark::after{ content:""; position:absolute; inset:0; background:center/120mm no-repeat; opacity:.07; z-index:1; pointer-events:none; background-image: var(--wm-url); transform:rotate(-10deg); }
-  .wm-content{ position:relative; z-index:2; }
+  .watermark{ position:relative; } .watermark::after{ content:""; position:absolute; inset:0; background:center/120mm no-repeat; opacity:.07; z-index:1; pointer-events:none; background-image: var(--wm-url); transform:rotate(-10deg); } .wm-content{ position:relative; z-index:2; }
   #printable{ display:flex; justify-content:center; }
-
-  input, select { outline:none; }
-  input:focus, select:focus { box-shadow: 0 0 0 3px rgba(59,130,246,.18); border-color: #60a5fa !important; }
+  input, select { outline:none; } input:focus, select:focus { box-shadow: 0 0 0 3px rgba(59,130,246,.18); border-color: #60a5fa !important; }
   .input-error { border-color:#ef4444 !important; box-shadow:0 0 0 3px rgba(239,68,68,.15) !important; }
-  .help-error { font-size:12px; color:#dc2626; margin-top:4px; display:none; }
-  .help-error.show { display:block; }
-
-  .primary{ background:var(--navy); color:#fff; border-radius:12px; transition:.2s }
-  .primary:hover{ background:var(--navy-2) }
-  input,select{ border-color:#d6dafe !important }
-  .field-label{ color:#2a2f61 }
-
+  .help-error { font-size:12px; color:#dc2626; margin-top:4px; display:none; } .help-error.show { display:block; }
+  .primary{ background:var(--navy); color:#fff; border-radius:12px; transition:.2s } .primary:hover{ background:var(--navy-2) }
+  input,select{ border-color:#d6dafe !important } .field-label{ color:#2a2f61 }
   @page{ size:A4; margin:10mm; }
   @media print{
     html, body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; background:#fff; }
@@ -62,7 +38,6 @@
     .box{ border-color:#b8c2d9; box-shadow:none; }
     .sheet-head{ background:#1b2253; color:#fff; border-bottom:none; }
   }
-
   @media (prefers-color-scheme: dark){
     body{ background:#0f1528; }
     .primary{ background:#0f173d; color:#e6e9ff; }
@@ -75,10 +50,8 @@
 </head>
 <body>
 
-<!-- TOASTS -->
 <div id="toastRoot" class="fixed top-4 right-4 z-40 space-y-2 no-print"></div>
 
-<!-- HEADER (página) -->
 <header class="no-print sticky top-0 z-20">
   <div class="bg-[#1b2253] text-white">
     <div class="max-w-6xl mx-auto px-4 pt-4 pb-2">
@@ -104,26 +77,24 @@
   </div>
 </header>
 
-<!-- FORM + STATS -->
 <main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-3 gap-6 no-print">
   <section class="bg-white/95 backdrop-blur border border-slate-200 shadow-sm rounded-xl p-6 md:col-span-2">
     <h2 class="text-xl font-semibold mb-4" style="color:#1b2253">Registrar turno</h2>
     <form id="turno-form" class="grid grid-cols-1 gap-4">
-      <label class="text-sm field-label">Oficio<span class="text-red-500">*</span>
-        <input name="oficio" class="mt-1 w-full rounded-lg border px-3 py-2" required>
+      <label class="text-sm field-label">Número completo de oficio <span class="text-red-500">*</span>
+        <input name="oficio" class="mt-1 w-full rounded-lg border px-3 py-2" placeholder="Ej.: FPG-FEDOTI*-064-2025-0042**-O" required>
       </label>
-      <label class="text-sm field-label">N° Investigación Previa / Instrucción Fiscal<span class="text-red-500">*</span>
+      <label class="text-sm field-label">N° Investigación Previa / Instrucción Fiscal <span class="text-red-500">*</span>
         <input name="numeroInvestigacion" class="mt-1 w-full rounded-lg border px-3 py-2" required>
       </label>
-      <label class="text-sm field-label">Fiscal solicitante<span class="text-red-500">*</span>
-        <input name="fiscal" class="mt-1 w-full rounded-lg border px-3 py-2" required>
+      <label class="text-sm field-label">Nombre completo del Fiscal solicitante <span class="text-red-500">*</span>
+        <input name="fiscal" class="mt-1 w-full rounded-lg border px-3 py-2" placeholder="Ej.: Juan Carlos Pérez Gómez" required>
       </label>
-      <label class="text-sm field-label">Propietario del vehículo<span class="text-red-500">*</span>
-        <input name="propietario" class="mt-1 w-full rounded-lg border px-3 py-2" required>
+      <label class="text-sm field-label">Nombre completo del Propietario del vehículo <span class="text-red-500">*</span>
+        <input name="propietario" class="mt-1 w-full rounded-lg border px-3 py-2" placeholder="Ej.: María Fernanda López Ruiz" required>
       </label>
 
-      <!-- Placa autos y motos -->
-      <label class="text-sm field-label">Placa<span class="text-red-500">*</span>
+      <label class="text-sm field-label">Placa <span class="text-red-500">*</span>
         <input id="inpPlaca" name="placa" class="mt-1 w-full rounded-lg border px-3 py-2 uppercase"
                placeholder="Autos: ABC-123 / ABC-1234 · Motos: AB123C (o AB-123C)"
                pattern="(?:[A-Za-z]{3}-?\d{3,4}|[A-Za-z]{2}-?\d{3}[A-Za-z])"
@@ -131,17 +102,17 @@
         <p id="errPlaca" class="help-error">Formato de placa inválido (Autos: ABC-123 / ABC-1234 · Motos: AB123C).</p>
       </label>
 
-      <label class="text-sm field-label">Correo electrónico (para confirmar)<span class="text-red-500">*</span>
+      <label class="text-sm field-label">Correo electrónico (para confirmar) <span class="text-red-500">*</span>
         <input id="inpEmail" name="email" type="email" class="mt-1 w-full rounded-lg border px-3 py-2"
                placeholder="tucorreo@ejemplo.com" required>
         <p id="errEmail" class="help-error">Correo inválido.</p>
       </label>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <label class="text-sm field-label">Fecha<span class="text-red-500">*</span>
+        <label class="text-sm field-label">Fecha <span class="text-red-500">*</span>
           <input type="date" name="fecha" class="mt-1 w-full rounded-lg border px-3 py-2" required>
         </label>
-        <label class="text-sm field-label">Franja horaria<span class="text-red-500">*</span>
+        <label class="text-sm field-label">Franja horaria <span class="text-red-500">*</span>
           <select name="slotId" class="mt-1 w-full rounded-lg border px-3 py-2" required>
             <option value="08:00-10:00">08:00 – 10:00</option>
             <option value="10:30-12:00">10:30 – 12:00</option>
@@ -169,14 +140,12 @@
   </aside>
 </main>
 
-<!-- COMPROBANTE -->
 <section id="receiptCard" class="px-4 pb-6 hidden">
   <div id="printable">
     <div id="receipt"></div>
   </div>
 </section>
 
-<!-- Botón imprimir (solo cuando hay comprobante) -->
 <div id="printBtnBar" class="fixed bottom-3 left-0 right-0 flex justify-center gap-3 no-print hidden">
   <button class="primary px-5 py-2 text-sm font-semibold shadow" onclick="window.print()">IMPRIMIR COMPROBANTE</button>
 </div>
@@ -185,19 +154,15 @@
   Sistema de turnos • Uso institucional
 </footer>
 
-<!-- ===== Modal secreto (Ctrl+Alt+A) ===== -->
 <div id="adminModal" class="fixed inset-0 z-[100] hidden no-print">
   <div class="absolute inset-0 bg-black/50"></div>
   <div class="relative mx-auto mt-[15vh] w-[92%] max-w-md rounded-2xl bg-white p-6 shadow-xl">
     <h3 class="text-lg font-semibold text-slate-800">Acceso administrador</h3>
     <p class="mt-1 text-sm text-slate-600">Ingresa el código secreto para abrir el panel.</p>
-
-    <label class="block mt-4 text-sm">
-      Código
+    <label class="block mt-4 text-sm">Código
       <input id="adminCode" type="password" class="mt-1 w-full rounded-lg border px-3 py-2" placeholder="•••••••••" autofocus>
     </label>
     <p id="adminErr" class="mt-2 text-sm text-red-600 hidden">Código incorrecto.</p>
-
     <div class="mt-5 flex justify-end gap-2">
       <button id="adminCancel" class="px-4 py-2 rounded-lg border">Cancelar</button>
       <button id="adminOk" class="px-4 py-2 rounded-lg text-white" style="background:#1b2253">Entrar</button>
@@ -207,11 +172,10 @@
 
 <script>
   /* ====== CONFIG ====== */
-  const API_URL = "https://script.google.com/macros/s/AKfycbyZM7AY6rNNlV_xE6MBipt6J3b6XnX0f8T7er24J_ee_kMs2c_F1jepmghxBf2Xtcof-w/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbzcSlTxGuDSoBnny-YmX2RYwwkuStx1j3_OY4PPa3Xh0W1wta-VWv-g6vo8NPhHA15dqA/exec";
   const ESCUDO_HEADER = "https://static.wixstatic.com/media/64d480_16da53d2b3f8461885a38d15edcdd25c~mv2.png/v1/fill/w_190,h_190,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Escudo_Policia_Nacional_Ecuador-removebg-preview.png";
   const WATERMARK_URL = "https://drive.google.com/uc?export=view&id=1k4OrJhFAHMbi7I3Um853TME_BcrTNu-4";
 
-  /* ====== HELPERS ====== */
   function showToast(msg, type="success", ms=3500){
     const root = document.getElementById("toastRoot");
     const box = document.createElement("div");
@@ -226,12 +190,18 @@
     btn.disabled=isOn; if (spin) spin.classList.toggle("hidden", !isOn);
   }
   async function postJSONCompat(payload){
-    try{ const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)}); return await r.json(); }
-    catch{}
+    try{
+      const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)});
+      return await r.json();
+    }catch{}
     const body="payload="+encodeURIComponent(JSON.stringify(payload));
-    const r2=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body}); return await r2.json();
+    const r2=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body});
+    return await r2.json();
   }
-  async function getStats(fecha){ const r=await fetch(`${API_URL}?action=stats&fecha=${encodeURIComponent(fecha)}`); return await r.json(); }
+  async function getStats(fecha){
+    const r=await fetch(`${API_URL}?action=stats&fecha=${encodeURIComponent(fecha)}`);
+    return await r.json();
+  }
 
   function renderStatsBox(stats){
     const box=document.getElementById("stats");
@@ -255,7 +225,6 @@
         Total del día: ${s.usadosDia} / ${s.totalDia} (restan ${s.remainingDay})</div>`;
   }
 
-  // Sombra header
   window.addEventListener("scroll", ()=>{ document.getElementById("headerCard").classList.toggle("shadow-md", (window.scrollY||0) > 8); }, {passive:true});
 
   document.addEventListener("DOMContentLoaded", ()=>{
@@ -280,7 +249,7 @@
     refreshStats(); fecha.addEventListener("change", refreshStats);
 
     const rePlaca = /^(?:[A-Za-z]{3}-?\d{3,4}|[A-Za-z]{2}-?\d{3}[A-Za-z])$/;
-    const reEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const reEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i; // acepta hotmail/outlook/yahoo/etc.
     const errPlaca = document.getElementById("errPlaca");
     const errEmail = document.getElementById("errEmail");
     function valLive(el, errEl, testFn){ const ok=testFn(el.value.trim()); el.classList.toggle("input-error", !ok); errEl.classList.toggle("show", !ok); return ok; }
@@ -306,7 +275,6 @@
         const r = resp.turno;
         const slot = r.slotId === "08:00-10:00" ? "08:00 – 10:00" : "10:30 – 12:00";
 
-        // Render comprobante (escudo en el HEADER a la izquierda)
         receiptDiv.style.setProperty("--wm-url", `url("${WATERMARK_URL}")`);
         receiptDiv.innerHTML = `
           <div class="sheet watermark">
@@ -320,15 +288,15 @@
                 <div class="space-y-4">
                   <div class="group"><div class="label">Correo</div><div class="box">${r.email}</div></div>
                   <div class="group"><div class="label">Fecha</div><div class="box">${r.fecha}</div></div>
-                  <div class="group"><div class="label">Oficio</div><div class="box">${r.oficio}</div></div>
-                  <div class="group"><div class="label">Fiscal solicitante</div><div class="box">${r.fiscal}</div></div>
+                  <div class="group"><div class="label">Número de oficio</div><div class="box">${r.oficio}</div></div>
+                  <div class="group"><div class="label">Fiscal (nombre completo)</div><div class="box">${r.fiscal}</div></div>
                   <div class="group"><div class="label">Placa</div><div class="box">${r.placa}</div></div>
                 </div>
                 <div class="space-y-4">
                   <div class="group"><div class="label">ID turno</div><div class="box">${r.id_turno}</div></div>
                   <div class="group"><div class="label">Horario</div><div class="box">${slot}</div></div>
                   <div class="group"><div class="label">N° Inv./Instr. Fiscal</div><div class="box">${r.numeroInvestigacion}</div></div>
-                  <div class="group"><div class="label">Propietario</div><div class="box">${r.propietario}</div></div>
+                  <div class="group"><div class="label">Propietario (nombre completo)</div><div class="box">${r.propietario}</div></div>
                 </div>
               </div>
               <div class="footer-note">Dirección de Criminalística • Análisis de Numeraciones y Marcas Seriales</div>
@@ -355,8 +323,7 @@
     });
   });
 
-  // ====== Modal Admin secreto (Ctrl+Alt+A) ======
-  const SECRET_CODE = 'Admin123'; // MISMO que ADMIN_TOKEN en Script Properties
+  const SECRET_CODE = 'Admin123';
   const adminModal  = document.getElementById('adminModal');
   const adminCode   = document.getElementById('adminCode');
   const adminErr    = document.getElementById('adminErr');
